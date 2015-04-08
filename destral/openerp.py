@@ -39,6 +39,17 @@ class OpenERPService(object):
         finally:
             cursor.close()
 
+    def drop_database(self):
+        import sql_db
+        conn = sql_db.db_connect(self.db_name)
+        cursor = conn.cursor()
+        try:
+            logging.info('Droping database %s', self.db_name)
+            cursor.autocommit(True)
+            cursor.execute('DROP DATABASE ' + self.db_name)
+        finally:
+            cursor.close()
+
     @property
     def db_name(self):
         return self.config['db_name']
