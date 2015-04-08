@@ -12,7 +12,7 @@ setup(
     author_email='devel@gisce.net',
     entry_points={
         'console_scripts': [
-            'ootest = destral.testing:main'
+            'ootest = destral.cli:main'
         ]
     },
     description=''
