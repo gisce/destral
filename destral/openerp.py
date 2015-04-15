@@ -1,9 +1,11 @@
+import logging
 import time
 
 from osconf import config_from_environment
 from destral.utils import update_config
 
 
+logger = logging.getLogger('destral.openerp')
 DEFAULT_USER = 1
 
 
@@ -30,9 +32,21 @@ class OpenERPService(object):
         conn = sql_db.db_connect('template1')
         cursor = conn.cursor()
         try:
+            logging.info('Creating database %s', db_name)
             cursor.autocommit(True)
             cursor.execute('CREATE DATABASE ' + db_name + ' WITH TEMPLATE base')
             return db_name
+        finally:
+            cursor.close()
+
+    def drop_database(self):
+        import sql_db
+        conn = sql_db.db_connect(self.db_name)
+        cursor = conn.cursor()
+        try:
+            logging.info('Droping database %s', self.db_name)
+            cursor.autocommit(True)
+            cursor.execute('DROP DATABASE ' + self.db_name)
         finally:
             cursor.close()
 
@@ -46,6 +60,7 @@ class OpenERPService(object):
         self.db, self.pool = self.pooler.get_db_and_pool(self.db_name)
 
     def install_module(self, module):
+        logger.info('Installing module %s', module)
         import pooler
         from destral.transaction import Transaction
         module_obj = self.pool.get('ir.module.module')
@@ -68,7 +83,7 @@ class OpenERPService(object):
                     ('module_id', '=', mod.id)
                 ])
                 for dep_mod in mod_dep_obj.browse(txn.cursor, txn.user, deps):
-                    if dep_mod.state in ('unknown','uninstalled'):
+                    if dep_mod.state in ('unknown', 'uninstalled'):
                         unmet_packages.append(dep_mod.name)
             mod_obj.download(txn.cursor, txn.user, ids)
             txn.cursor.commit()
