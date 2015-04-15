@@ -13,9 +13,13 @@ class OOTestCase(unittest.TestCase):
     """Base class to inherit test cases from for OpenERP Testing Framework.
     """
 
+    @property
+    def database(self):
+        return self.openerp.db_name
+
     def setUp(self):
         self.openerp = OpenERPService()
-        self.database = self.openerp.create_database()
+        self.openerp.db_name = self.openerp.create_database()
         self.config = config_from_environment('OOTEST', ['module'])
         self.openerp.install_module(self.config['module'])
 
