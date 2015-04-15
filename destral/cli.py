@@ -15,6 +15,7 @@ def main():
         if module and module not in modules_to_test:
             modules_to_test.append(module)
 
+    OpenERPService()
     for module in modules_to_test:
         o = OpenERPService()
         db_name = o.create_database()
