@@ -15,6 +15,7 @@ class OpenERPService(object):
         config = config_from_environment('OPENERP', [], **kwargs)
         import netsvc
         import tools
+        update_config(tools.config, **config)
         tools.config.parse()
         from tools import config as default_config
         self.config = update_config(default_config, **config)
