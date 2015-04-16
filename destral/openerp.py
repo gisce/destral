@@ -67,6 +67,7 @@ class OpenERPService(object):
         from destral.transaction import Transaction
         module_obj = self.pool.get('ir.module.module')
         with Transaction().start(self.config['db_name']) as txn:
+            module_obj.update_list(txn.cursor, txn.user)
             module_ids = module_obj.search(
                 txn.cursor, DEFAULT_USER,
                 [('name', '=', module)],
