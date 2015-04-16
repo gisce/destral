@@ -42,7 +42,8 @@ class OpenERPService(object):
 
     def drop_database(self):
         import sql_db
-        conn = sql_db.db_connect(self.db_name)
+        sql_db.close_db(self.db_name)
+        conn = sql_db.db_connect('template1')
         cursor = conn.cursor()
         try:
             logging.info('Droping database %s', self.db_name)

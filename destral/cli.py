@@ -2,9 +2,13 @@ import os
 import sys
 import subprocess
 import unittest
+import logging
 
 from destral.utils import detect_module
 from destral.openerp import OpenERPService
+
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def main():
@@ -24,7 +28,11 @@ def main():
         modules_to_test = sys.argv[1:]
     for module in modules_to_test:
         os.environ['OOTEST_MODULE'] = module
-        suite = unittest.TestLoader().loadTestsFromName('addons.%s' % module)
+        tests_module = 'addons.{}.tests'.format(module)
+        try:
+            suite = unittest.TestLoader().loadTestsFromName(tests_module)
+        except AttributeError:
+            suite = unittest.TestSuite()
         if not suite.countTestCases():
             suite = unittest.TestLoader().loadTestsFromName('destral.testing')
         unittest.TextTestRunner(verbosity=2).run(suite)

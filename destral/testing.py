@@ -23,26 +23,34 @@ class OOTestCase(unittest.TestCase):
         self.config = config_from_environment('OOTEST', ['module'])
         self.openerp.install_module(self.config['module'])
 
+
     def test_all_views(self):
         logger.info('Testing views for module %s', self.config['module'])
         imd_obj = self.openerp.pool.get('ir.model.data')
         view_obj = self.openerp.pool.get('ir.ui.view')
         with Transaction().start(self.database) as txn:
-            view_ids = imd_obj.search(txn.cursor, txn.user, [
+            imd_ids = imd_obj.search(txn.cursor, txn.user, [
                 ('model', '=', 'ir.ui.view'),
                 ('module', '=', self.config['module'])
             ])
-            if view_ids:
+            if imd_ids:
+                views = {}
+                for imd in imd_obj.read(txn.cursor, txn.user, imd_ids):
+                    view_xml_name = '{}.{}'.format(imd['module'], imd['name'])
+                    views[imd['res_id']] = view_xml_name
+                view_ids = views.keys()
+                logger.info('Testing %s views...', len(view_ids))
                 for view in view_obj.browse(txn.cursor, txn.user, view_ids):
+                    view_xml_name = views[view.id]
                     model = self.openerp.pool.get(view.model)
                     if model is None:
                         # Check if model exists
                         raise Exception(
-                            'View (id: %s) references model %s which does not '
-                            'exist' % (view.id, view.model)
+                            'View (xml id: %s) references model %s which does '
+                            'not exist' % (view_xml_name, view.model)
                         )
                     logger.info('Testing view %s (id: %s)', view.name, view.id)
-                    model.fields_view_get(txn.cursor, txn.uid, view.id,
+                    model.fields_view_get(txn.cursor, txn.user, view.id,
                                           view.type)
 
     def tearDown(self):

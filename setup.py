@@ -15,5 +15,8 @@ setup(
             'ootest = destral.cli:main'
         ]
     },
+    install_requires=[
+        'expects'
+    ],
     description=''
 )
