@@ -26,6 +26,8 @@ def main():
 
     else:
         modules_to_test = sys.argv[1:]
+
+    results = []
     for module in modules_to_test:
         os.environ['OOTEST_MODULE'] = module
         tests_module = 'addons.{}.tests'.format(module)
@@ -35,7 +37,16 @@ def main():
             suite = unittest.TestSuite()
         if not suite.countTestCases():
             suite = unittest.TestLoader().loadTestsFromName('destral.testing')
-        unittest.TextTestRunner(verbosity=2).run(suite)
+        result = unittest.TextTestRunner(verbosity=2).run(suite)
+        if not result.wasSuccessful():
+            results.append(False)
+        else:
+            results.append(True)
+
+    if not all(results):
+        sys.exit(1)
+
+
 
 if __name__ == '__main__':
     main()
