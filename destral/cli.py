@@ -10,6 +10,8 @@ from destral.openerp import OpenERPService
 
 logging.basicConfig(level=logging.DEBUG)
 
+logger = logging.getLogger('destral.cli')
+
 
 def main():
     OpenERPService()
@@ -29,6 +31,7 @@ def main():
 
     results = []
     for module in modules_to_test:
+        logger.info('Testing module %s', module)
         os.environ['OOTEST_MODULE'] = module
         tests_module = 'addons.{}.tests'.format(module)
         try:
