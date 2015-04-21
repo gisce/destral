@@ -38,8 +38,8 @@ def main():
         logger.debug('Test module: %s', tests_module)
         try:
             suite = unittest.TestLoader().loadTestsFromName(tests_module)
-        except AttributeError:
-            logger.debug('Test suits not found...')
+        except AttributeError, e:
+            logger.debug('Test suits not found...%s', e)
             suite = unittest.TestSuite()
         if not suite.countTestCases():
             suite = unittest.TestLoader().loadTestsFromName('destral.testing')
