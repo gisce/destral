@@ -30,13 +30,16 @@ def main():
         modules_to_test = sys.argv[1:]
 
     results = []
+    logger.debug('Sys.path: %s', sys.path)
     for module in modules_to_test:
         logger.info('Testing module %s', module)
         os.environ['OOTEST_MODULE'] = module
         tests_module = 'addons.{}.tests'.format(module)
+        logger.debug('Test module: %s', test_module)
         try:
             suite = unittest.TestLoader().loadTestsFromName(tests_module)
         except AttributeError:
+            logger.debug('Test suits not found...')
             suite = unittest.TestSuite()
         if not suite.countTestCases():
             suite = unittest.TestLoader().loadTestsFromName('destral.testing')
