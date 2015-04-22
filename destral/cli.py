@@ -36,7 +36,7 @@ def main():
         os.environ['OOTEST_MODULE'] = module
         tests_module = 'addons.{}.tests'.format(module)
         logger.debug('Test module: %s', tests_module)
-        import addons.hr_documents
+        import addons.hr_documents.tests
         logger.debug(addons.hr_documents.tests)
         try:
             suite = unittest.TestLoader().loadTestsFromName(tests_module)
