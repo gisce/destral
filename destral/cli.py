@@ -14,7 +14,7 @@ logger = logging.getLogger('destral.cli')
 
 
 def main():
-    OpenERPService()
+    service = OpenERPService()
     if len(sys.argv) < 2:
         paths = subprocess.check_output([
             "git", "diff", "--name-only", "HEAD~1..HEAD"
@@ -30,14 +30,17 @@ def main():
         modules_to_test = sys.argv[1:]
 
     results = []
-    logger.debug('Sys.path: %s', sys.path)
     for module in modules_to_test:
+        req = os.path.join(
+            service.config['addons_path'], module, 'requirements.txt'
+        )
+        if os.path.exists(req):
+            logger.info('Requirements file %s found. Installing...', req)
+            subprocess.check_call(["pip", "install", "-r", req])
         logger.info('Testing module %s', module)
         os.environ['OOTEST_MODULE'] = module
         tests_module = 'addons.{}.tests'.format(module)
         logger.debug('Test module: %s', tests_module)
-        import addons.hr_documents
-        logger.debug(addons.hr_documents.tests)
         try:
             suite = unittest.TestLoader().loadTestsFromName(tests_module)
         except AttributeError, e:
