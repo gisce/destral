@@ -36,6 +36,8 @@ def main():
         os.environ['OOTEST_MODULE'] = module
         tests_module = 'addons.{}.tests'.format(module)
         logger.debug('Test module: %s', tests_module)
+        import addons.hr_documents
+        logger.debug(addons.hr_documents)
         try:
             suite = unittest.TestLoader().loadTestsFromName(tests_module)
         except AttributeError, e:
