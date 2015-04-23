@@ -34,9 +34,10 @@ def main():
         req = os.path.join(
             service.config['addons_path'], module, 'requirements.txt'
         )
-        if os.path.exists(req):
+        pip = os.path.join(sys.prefix, 'bin', 'pip')
+        if os.path.exists(req) and os.path.exists(pip):
             logger.info('Requirements file %s found. Installing...', req)
-            subprocess.check_call(["pip", "install", "-r", req])
+            subprocess.check_call([pip, "install", "-r", req])
         logger.info('Testing module %s', module)
         os.environ['OOTEST_MODULE'] = module
         tests_module = 'addons.{}.tests'.format(module)
