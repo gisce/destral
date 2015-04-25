@@ -18,6 +18,7 @@ class OOTestCase(unittest.TestCase):
         return self.openerp.db_name
 
     def setUp(self):
+        self.config = config_from_environment('DESTRAL', ['module'])
         self.openerp = OpenERPService()
         self.openerp.db_name = self.openerp.create_database()
         self.config = config_from_environment('OOTEST', ['module'])

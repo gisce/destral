@@ -39,7 +39,7 @@ def main():
             logger.info('Requirements file %s found. Installing...', req)
             subprocess.check_call([pip, "install", "-r", req])
         logger.info('Testing module %s', module)
-        os.environ['OOTEST_MODULE'] = module
+        os.environ['DESTRAL_MODULE'] = module
         tests_module = 'addons.{}.tests'.format(module)
         logger.debug('Test module: %s', tests_module)
         try:
