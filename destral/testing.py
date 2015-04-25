@@ -20,10 +20,9 @@ class OOTestCase(unittest.TestCase):
     def setUp(self):
         self.config = config_from_environment('DESTRAL', ['module'])
         self.openerp = OpenERPService()
-        self.openerp.db_name = self.openerp.create_database()
-        self.config = config_from_environment('OOTEST', ['module'])
-        self.openerp.install_module(self.config['module'])
-
+        if not self.openerp.db_name:
+            self.openerp.db_name = self.openerp.create_database()
+            self.openerp.install_module(self.config['module'])
 
     def test_all_views(self):
         logger.info('Testing views for module %s', self.config['module'])
