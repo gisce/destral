@@ -9,6 +9,11 @@ logger = logging.getLogger('destral.openerp')
 DEFAULT_USER = 1
 
 
+def patched_pool_jobs(*args, **kwargs):
+    logger.debug('Patched ir.cron')
+    return False
+
+
 class OpenERPService(object):
 
     def __init__(self, **kwargs):
@@ -33,7 +38,7 @@ class OpenERPService(object):
         conn = sql_db.db_connect('template1')
         cursor = conn.cursor()
         try:
-            logging.info('Creating database %s', db_name)
+            logger.info('Creating database %s', db_name)
             cursor.autocommit(True)
             cursor.execute('CREATE DATABASE ' + db_name + ' WITH TEMPLATE base')
             return db_name
@@ -46,7 +51,7 @@ class OpenERPService(object):
         conn = sql_db.db_connect('template1')
         cursor = conn.cursor()
         try:
-            logging.info('Droping database %s', self.db_name)
+            logger.info('Droping database %s', self.db_name)
             cursor.autocommit(True)
             cursor.execute('DROP DATABASE ' + self.db_name)
         finally:
@@ -60,6 +65,10 @@ class OpenERPService(object):
     def db_name(self, value):
         self.config['db_name'] = value
         self.db, self.pool = self.pooler.get_db_and_pool(self.db_name)
+        logger.debug('Patching ir.cron _poolJobs with %s', patched_pool_jobs)
+        cron = self.pool.get('ir.cron')
+        cron._poolJobs = patched_pool_jobs
+        self.pool.obj_pool['ir.cron'] = cron
 
     def install_module(self, module):
         logger.info('Installing module %s', module)
