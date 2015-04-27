@@ -55,3 +55,4 @@ class OOTestCase(unittest.TestCase):
 
     def tearDown(self):
         self.openerp.drop_database()
+        self.openerp.config['db_name'] = False
