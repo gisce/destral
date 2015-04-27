@@ -4,6 +4,7 @@ import subprocess
 import unittest
 import logging
 
+import click
 from destral.utils import detect_module
 from destral.openerp import OpenERPService
 
@@ -13,9 +14,13 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger('destral.cli')
 
 
-def main():
+@click.command()
+@click.option('--modules', '-m', multiple=True)
+@click.option('--tests', '-t', multiple=True)
+def destral(modules, tests):
+    sys.argv = sys.argv[:1]
     service = OpenERPService()
-    if len(sys.argv) < 2:
+    if not modules:
         paths = subprocess.check_output([
             "git", "diff", "--name-only", "HEAD~1..HEAD"
         ])
@@ -27,7 +32,7 @@ def main():
                 modules_to_test.append(module)
 
     else:
-        modules_to_test = sys.argv[1:]
+        modules_to_test = modules[:]
 
     results = []
     for module in modules_to_test:
@@ -42,11 +47,15 @@ def main():
         os.environ['DESTRAL_MODULE'] = module
         tests_module = 'addons.{}.tests'.format(module)
         logger.debug('Test module: %s', tests_module)
-        try:
-            suite = unittest.TestLoader().loadTestsFromName(tests_module)
-        except AttributeError, e:
-            logger.debug('Test suits not found...%s', e)
-            suite = unittest.TestSuite()
+        if tests:
+            tests = ['{}.{}'.format(tests_module, t) for t in tests]
+            suite = unittest.TestLoader().loadTestsFromNames(tests)
+        else:
+            try:
+                suite = unittest.TestLoader().loadTestsFromName(tests_module)
+            except AttributeError, e:
+                logger.debug('Test suits not found...%s', e)
+                suite = unittest.TestSuite()
         if not suite.countTestCases():
             suite = unittest.TestLoader().loadTestsFromName('destral.testing')
         result = unittest.TextTestRunner(verbosity=2).run(suite)
@@ -59,6 +68,5 @@ def main():
         sys.exit(1)
 
 
-
 if __name__ == '__main__':
-    main()
+    destral()
