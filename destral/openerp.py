@@ -65,10 +65,10 @@ class OpenERPService(object):
     def db_name(self, value):
         self.config['db_name'] = value
         self.db, self.pool = self.pooler.get_db_and_pool(self.db_name)
+        logger.debug('Patching ir.cron _poolJobs with %s', patched_pool_jobs)
         cron = self.pool.get('ir.cron')
         cron._poolJobs = patched_pool_jobs
         self.pool.obj_pool['ir.cron'] = cron
-        logger.debug('Patching ir.cron _poolJobs (%s)', cron._poolJobs)
 
     def install_module(self, module):
         logger.info('Installing module %s', module)
