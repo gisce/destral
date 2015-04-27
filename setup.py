@@ -8,7 +8,8 @@ setup(
     url='https://github.com/gisce/destral',
     install_requires=[
         'osconf',
-        'expects'
+        'expects',
+        'click'
     ],
     license='MIT',
     author='GISCE-TI, S.L.',
