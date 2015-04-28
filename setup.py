@@ -11,7 +11,7 @@ setup(
         'expects',
         'click'
     ],
-    license='MIT',
+    license='GNU GPLv3',
     author='GISCE-TI, S.L.',
     author_email='devel@gisce.net',
     entry_points={
