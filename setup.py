@@ -19,5 +19,5 @@ setup(
             'destral = destral.cli:destral'
         ]
     },
-    description=''
+    description='OpenERP testing framework'
 )
