@@ -1,7 +1,7 @@
 Destral testing library
 =======================
 
-A library to do tests with our OpenERP Server
+A library to do tests with our OpenERP Server (v5)
 
 .. note::
   The API is not stable, and can be changed.
