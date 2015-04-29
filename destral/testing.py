@@ -20,8 +20,10 @@ class OOTestCase(unittest.TestCase):
     def setUp(self):
         self.config = config_from_environment('DESTRAL', ['module'])
         self.openerp = OpenERPService()
+        self.drop_database = False
         if not self.openerp.db_name:
             self.openerp.db_name = self.openerp.create_database()
+            self.drop_database = True
             self.openerp.install_module(self.config['module'])
 
     def test_all_views(self):
@@ -54,5 +56,6 @@ class OOTestCase(unittest.TestCase):
                                           view.type)
 
     def tearDown(self):
-        self.openerp.drop_database()
+        if self.drop_database:
+            self.openerp.drop_database()
         self.openerp.config['db_name'] = False
