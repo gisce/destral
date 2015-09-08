@@ -31,6 +31,8 @@ class OpenERPService(object):
         self.pool = None
         if 'db_name' in config:
             self.db_name = config['db_name']
+        # Stop the cron
+        netsvc.Agent.quit()
 
     def create_database(self):
         db_name = 'test_' + str(int(time.time()))
@@ -65,10 +67,9 @@ class OpenERPService(object):
     def db_name(self, value):
         self.config['db_name'] = value
         self.db, self.pool = self.pooler.get_db_and_pool(self.db_name)
-        logger.debug('Patching ir.cron _poolJobs with %s', patched_pool_jobs)
-        cron = self.pool.get('ir.cron')
-        cron._poolJobs = patched_pool_jobs
-        self.pool.obj_pool['ir.cron'] = cron
+        logger.debug('Stopping cron Agent.')
+        import netsvc
+        netsvc.Agent.quit()
 
     def install_module(self, module):
         logger.info('Installing module %s', module)
