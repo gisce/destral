@@ -54,6 +54,13 @@ class OOTestCase(unittest.TestCase):
                     logger.info('Testing view %s (id: %s)', view.name, view.id)
                     model.fields_view_get(txn.cursor, txn.user, view.id,
                                           view.type)
+                    if view.inherit_id:
+                        while view.inherit_id:
+                            view = view.inherit_id
+                        model.fields_view_get(txn.cursor, txn.user, view.id,
+                                              view.type)
+                        logger.info('Testing main view %s (id: %s)',
+                                    view.name, view.id)
 
     def tearDown(self):
         if self.drop_database:
