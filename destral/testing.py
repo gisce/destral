@@ -24,7 +24,10 @@ class OOTestCase(unittest.TestCase):
         if not self.openerp.db_name:
             self.openerp.db_name = self.openerp.create_database()
             self.drop_database = True
-            self.openerp.install_module(self.config['module'])
+            self.install_module()
+
+    def install_module(self):
+        self.openerp.install_module(self.config['module'])
 
     def test_all_views(self):
         logger.info('Testing views for module %s', self.config['module'])
