@@ -1,3 +1,4 @@
+import importlib
 import os
 import sys
 import subprocess
@@ -5,7 +6,7 @@ import unittest
 import logging
 
 import click
-from destral.utils import detect_module
+from destral.utils import detect_module, module_exists
 from destral.openerp import OpenERPService
 
 
@@ -47,6 +48,9 @@ def destral(modules, tests):
         os.environ['DESTRAL_MODULE'] = module
         tests_module = 'addons.{}.tests'.format(module)
         logger.debug('Test module: %s', tests_module)
+        # Module exists but there is an error show the error
+        if module_exists(tests_module) is None:
+            importlib.import_module(tests_module)
         if tests:
             tests = ['{}.{}'.format(tests_module, t) for t in tests]
             suite = unittest.TestLoader().loadTestsFromNames(tests)

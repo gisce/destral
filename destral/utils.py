@@ -1,3 +1,4 @@
+import imp
 import os
 
 
@@ -21,3 +22,18 @@ def detect_module(path):
         if '__terp__.py' in files:
             return module
     return None
+
+
+def module_exists(module):
+    modlist = module.split('.')
+    pathlist = None
+    for mod in modlist:
+        try:
+            openfile, pathname, desc = imp.find_module(mod, pathlist)
+            pathlist = [pathname]
+        except ImportError:
+            return False
+        else:
+            if openfile:
+                openfile.close()
+                return True
