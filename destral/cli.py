@@ -6,7 +6,7 @@ import unittest
 import logging
 
 import click
-from destral.utils import detect_module, module_exists
+from destral.utils import detect_module, module_exists, get_dependencies
 from destral.openerp import OpenERPService
 
 
@@ -36,14 +36,16 @@ def destral(modules, tests):
         modules_to_test = modules[:]
 
     results = []
+    addons_path = service.config['addons_path']
     for module in modules_to_test:
-        req = os.path.join(
-            service.config['addons_path'], module, 'requirements.txt'
-        )
-        pip = os.path.join(sys.prefix, 'bin', 'pip')
-        if os.path.exists(req) and os.path.exists(pip):
-            logger.info('Requirements file %s found. Installing...', req)
-            subprocess.check_call([pip, "install", "-r", req])
+        for dep_module in get_dependencies(module, addons_path):
+            req = os.path.join(
+                service.config['addons_path'], dep_module, 'requirements.txt'
+            )
+            pip = os.path.join(sys.prefix, 'bin', 'pip')
+            if os.path.exists(req) and os.path.exists(pip):
+                logger.info('Requirements file %s found. Installing...', req)
+                subprocess.check_call([pip, "install", "-r", req])
         logger.info('Testing module %s', module)
         os.environ['DESTRAL_MODULE'] = module
         tests_module = 'addons.{}.tests'.format(module)
