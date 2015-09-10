@@ -18,11 +18,15 @@ class OOTestCase(unittest.TestCase):
         return self.openerp.db_name
 
     def setUp(self):
-        self.config = config_from_environment('DESTRAL', ['module'])
+        self.config = config_from_environment(
+            'DESTRAL', ['module'], use_template=True
+        )
         self.openerp = OpenERPService()
         self.drop_database = False
         if not self.openerp.db_name:
-            self.openerp.db_name = self.openerp.create_database()
+            self.openerp.db_name = self.openerp.create_database(
+                self.config['use_template']
+            )
             self.drop_database = True
             self.install_module()
 

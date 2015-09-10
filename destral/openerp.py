@@ -3,6 +3,7 @@ import time
 
 from osconf import config_from_environment
 from destral.utils import update_config
+from destral.patch import patch_root_logger
 
 
 logger = logging.getLogger('destral.openerp')
@@ -17,11 +18,13 @@ def patched_pool_jobs(*args, **kwargs):
 class OpenERPService(object):
 
     def __init__(self, **kwargs):
+        patch_root_logger()
         config = config_from_environment('OPENERP', [], **kwargs)
         import netsvc
         import tools
         update_config(tools.config, **config)
-        tools.config.parse()
+        if hasattr(tools.config, 'parse'):
+            tools.config.parse()
         from tools import config as default_config
         self.config = update_config(default_config, **config)
         import pooler
@@ -34,7 +37,7 @@ class OpenERPService(object):
         # Stop the cron
         netsvc.Agent.quit()
 
-    def create_database(self):
+    def create_database(self, template=True):
         db_name = 'test_' + str(int(time.time()))
         import sql_db
         conn = sql_db.db_connect('template1')
@@ -42,7 +45,12 @@ class OpenERPService(object):
         try:
             logger.info('Creating database %s', db_name)
             cursor.autocommit(True)
-            cursor.execute('CREATE DATABASE ' + db_name + ' WITH TEMPLATE base')
+            if template:
+                cursor.execute('CREATE DATABASE {} WITH TEMPLATE base'.format(
+                    db_name
+                ))
+            else:
+                cursor.execute('CREATE DATABASE {}'.format(db_name))
             return db_name
         finally:
             cursor.close()
