@@ -68,4 +68,4 @@ class OOTestCase(unittest.TestCase):
     def tearDown(self):
         if self.drop_database:
             self.openerp.drop_database()
-        self.openerp.config['db_name'] = False
+            self.openerp.db_name = False
