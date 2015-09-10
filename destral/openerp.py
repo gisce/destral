@@ -21,7 +21,8 @@ class OpenERPService(object):
         import netsvc
         import tools
         update_config(tools.config, **config)
-        tools.config.parse()
+        if hasattr(tools.config, 'parse'):
+            tools.config.parse()
         from tools import config as default_config
         self.config = update_config(default_config, **config)
         import pooler
