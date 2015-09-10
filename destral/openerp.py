@@ -3,6 +3,7 @@ import time
 
 from osconf import config_from_environment
 from destral.utils import update_config
+from destral.patch import patch_root_logger
 
 
 logger = logging.getLogger('destral.openerp')
@@ -17,6 +18,7 @@ def patched_pool_jobs(*args, **kwargs):
 class OpenERPService(object):
 
     def __init__(self, **kwargs):
+        patch_root_logger()
         config = config_from_environment('OPENERP', [], **kwargs)
         import netsvc
         import tools
