@@ -66,7 +66,11 @@ class OpenERPService(object):
     @db_name.setter
     def db_name(self, value):
         self.config['db_name'] = value
-        self.db, self.pool = self.pooler.get_db_and_pool(self.db_name)
+        if value:
+            self.db, self.pool = self.pooler.get_db_and_pool(self.db_name)
+        else:
+            self.db = None
+            self.pool = None
 
     def install_module(self, module):
         logger.info('Installing module %s', module)
