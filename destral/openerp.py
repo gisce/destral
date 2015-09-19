@@ -8,16 +8,26 @@ from destral.patch import patch_root_logger
 
 logger = logging.getLogger('destral.openerp')
 DEFAULT_USER = 1
+"""Default user id
+"""
 
 
 def patched_pool_jobs(*args, **kwargs):
+    """Patch pool jobs
+    """
     logger.debug('Patched ir.cron')
     return False
 
 
 class OpenERPService(object):
+    """OpenERP Service.
+    """
 
     def __init__(self, **kwargs):
+        """Creates a new OpenERP service.
+
+        :param \**kwargs: keyword arguments passed to the config
+        """
         patch_root_logger()
         config = config_from_environment('OPENERP', [], **kwargs)
         import netsvc
@@ -38,6 +48,10 @@ class OpenERPService(object):
         netsvc.Agent.quit()
 
     def create_database(self, template=True):
+        """Creates a new database.
+
+        :param template: use a template (name must be `base`) (default True)
+        """
         db_name = 'test_' + str(int(time.time()))
         import sql_db
         conn = sql_db.db_connect('template1')
@@ -56,6 +70,8 @@ class OpenERPService(object):
             cursor.close()
 
     def drop_database(self):
+        """Drop database from `self.db_name`
+        """
         import sql_db
         sql_db.close_db(self.db_name)
         conn = sql_db.db_connect('template1')
@@ -69,6 +85,8 @@ class OpenERPService(object):
 
     @property
     def db_name(self):
+        """Database name.
+        """
         return self.config['db_name']
 
     @db_name.setter
@@ -81,6 +99,10 @@ class OpenERPService(object):
             self.pool = None
 
     def install_module(self, module):
+        """Installs a module
+
+        :param module: Module to install
+        """
         logger.info('Installing module %s', module)
         import pooler
         from destral.transaction import Transaction

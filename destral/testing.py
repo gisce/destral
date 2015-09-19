@@ -15,9 +15,17 @@ class OOTestCase(unittest.TestCase):
 
     @property
     def database(self):
+        """Database used in the test.
+        """
         return self.openerp.db_name
 
     def setUp(self):
+        """Set up the test
+
+        * Sets the config using environment variables prefixed with `DESTRAL_`.
+        * Creates a new OpenERP service.
+        * Installs the module to test if a database is not defined.
+        """
         self.config = config_from_environment(
             'DESTRAL', ['module'], use_template=True
         )
@@ -31,9 +39,13 @@ class OOTestCase(unittest.TestCase):
             self.install_module()
 
     def install_module(self):
+        """Install the module to test.
+        """
         self.openerp.install_module(self.config['module'])
 
     def test_all_views(self):
+        """Tests all views defined in the module.
+        """
         logger.info('Testing views for module %s', self.config['module'])
         imd_obj = self.openerp.pool.get('ir.model.data')
         view_obj = self.openerp.pool.get('ir.ui.view')
@@ -70,6 +82,11 @@ class OOTestCase(unittest.TestCase):
                                     view.name, view.id)
 
     def tearDown(self):
+        """Tear down the test.
+
+        If database is not defined, the database created for the test is
+        deleted
+        """
         if self.drop_database:
             self.openerp.drop_database()
             self.openerp.db_name = False
