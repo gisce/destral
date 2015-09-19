@@ -5,10 +5,10 @@ from destral.openerp import OpenERPService
 
 
 class Singleton(type):
-    '''
-    Metaclass for singleton pattern
+    """Metaclass for singleton pattern.
+
     :copyright: Tryton Project
-    '''
+    """
     def __init__(mcs, name, bases, dict_):
         super(Singleton, mcs).__init__(name, bases, dict_)
         mcs.instance = None
@@ -20,6 +20,8 @@ class Singleton(type):
 
 
 class Transaction(local):
+    """Transaction object
+    """
     __metaclass__ = Singleton
 
     database = None
@@ -33,6 +35,12 @@ class Transaction(local):
         pass
 
     def start(self, database_name, user=1, context=None):
+        """Start a new transaction
+
+        :param database_name: Database name
+        :param user: User id
+        :param context: Context to be used
+        """
         self._assert_stopped()
         self.service = OpenERPService(db_name=database_name)
         self.pool = self.service.pool
@@ -42,7 +50,8 @@ class Transaction(local):
         return self
 
     def stop(self):
-        'End the transaction'
+        """Stop the transaction.
+        """
         self.cursor.close()
         self.service = None
         self.cursor = None
@@ -52,7 +61,8 @@ class Transaction(local):
         self.pool = None
 
     def get_context(self):
-        'Loads the context of the current user'
+        """Loads the context of the current user
+        """
         assert self.user is not None
 
         user_obj = self.pool.get('res.users')
@@ -65,7 +75,6 @@ class Transaction(local):
         self.stop()
 
     def _assert_stopped(self):
-        'Assert that there is no active transaction'
         assert self.service is None
         assert self.database is None
         assert self.cursor is None

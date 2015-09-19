@@ -4,12 +4,19 @@ import os
 
 
 def update_config(config, **kwargs):
+    """Updates config dictionary from keyword arguments.
+    """
     for key, value in kwargs.iteritems():
         config[key] = value
     return config
 
 
 def detect_module(path):
+    """Detect if a path is part of a openerp module or not
+
+    :param path: to examine
+    :return: None if is not a module or the module name
+    """
     stack = path.split(os.path.sep)
     if not stack[0]:
         stack[0] = os.path.sep
@@ -26,6 +33,14 @@ def detect_module(path):
 
 
 def module_exists(module):
+    """Check if a python module exists.
+
+    This is used to check if a module have its own tests defined, Eg:
+    `addons.module_name.tests`
+    
+    :param module: Module name to check
+    :return: True if exists or False if not
+    """
     modlist = module.split('.')
     pathlist = None
     for mod in modlist:
@@ -41,6 +56,15 @@ def module_exists(module):
 
 
 def get_dependencies(module, addons_path=None, deps=None):
+    """Get all the dependencies of a module without database
+
+    Using `__terp__.py` files and is used to check requirements.txt in the
+    dependencies.
+
+    :param module: Module to find the dependencies
+    :param addons_path: Path to find the modules
+    :return: a listt of dependencies.
+    """
     if deps is None:
         deps = []
     if addons_path is None:
