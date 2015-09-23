@@ -38,9 +38,13 @@ def destral(modules, tests):
     results = []
     addons_path = service.config['addons_path']
     for module in modules_to_test:
-        for dep_module in get_dependencies(module, addons_path):
+        modules_requirements = get_dependencies(module, addons_path)
+        modules_requirements.append(module)
+        for module_requirements in modules_requirements:
             req = os.path.join(
-                service.config['addons_path'], dep_module, 'requirements.txt'
+                service.config['addons_path'],
+                module_requirements,
+                'requirements.txt'
             )
             pip = os.path.join(sys.prefix, 'bin', 'pip')
             if os.path.exists(req) and os.path.exists(pip):
