@@ -19,29 +19,31 @@ class OOTestCase(unittest.TestCase):
         """
         return self.openerp.db_name
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         """Set up the test
 
         * Sets the config using environment variables prefixed with `DESTRAL_`.
         * Creates a new OpenERP service.
         * Installs the module to test if a database is not defined.
         """
-        self.config = config_from_environment(
+        cls.config = config_from_environment(
             'DESTRAL', ['module'], use_template=True
         )
-        self.openerp = OpenERPService()
-        self.drop_database = False
-        if not self.openerp.db_name:
-            self.openerp.db_name = self.openerp.create_database(
-                self.config['use_template']
+        cls.openerp = OpenERPService()
+        cls.drop_database = False
+        if not cls.openerp.db_name:
+            cls.openerp.db_name = cls.openerp.create_database(
+                cls.config['use_template']
             )
-            self.drop_database = True
-            self.install_module()
+            cls.drop_database = True
+            cls.install_module()
 
-    def install_module(self):
+    @classmethod
+    def install_module(cls):
         """Install the module to test.
         """
-        self.openerp.install_module(self.config['module'])
+        cls.openerp.install_module(cls.config['module'])
 
     def test_all_views(self):
         """Tests all views defined in the module.
@@ -81,12 +83,13 @@ class OOTestCase(unittest.TestCase):
                         logger.info('Testing main view %s (id: %s)',
                                     view.name, view.id)
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
         """Tear down the test.
 
         If database is not defined, the database created for the test is
         deleted
         """
-        if self.drop_database:
-            self.openerp.drop_database()
-            self.openerp.db_name = False
+        if cls.drop_database:
+            cls.openerp.drop_database()
+            cls.openerp.db_name = False
