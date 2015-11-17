@@ -13,6 +13,8 @@ class OOTestCase(unittest.TestCase):
     """Base class to inherit test cases from for OpenERP Testing Framework.
     """
 
+    require_demo_data = False
+
     @property
     def database(self):
         """Database used in the test.
@@ -30,7 +32,11 @@ class OOTestCase(unittest.TestCase):
         cls.config = config_from_environment(
             'DESTRAL', ['module'], use_template=True
         )
-        cls.openerp = OpenERPService()
+        ooconfig = {}
+        if cls.require_demo_data:
+            cls.config['use_template'] = False
+            ooconfig['demo'] = {'all': 1}
+        cls.openerp = OpenERPService(**ooconfig)
         cls.drop_database = False
         if not cls.openerp.db_name:
             cls.openerp.db_name = cls.openerp.create_database(
