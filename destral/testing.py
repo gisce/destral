@@ -36,6 +36,9 @@ class OOTestCase(unittest.TestCase):
         if cls.require_demo_data:
             cls.config['use_template'] = False
             ooconfig['demo'] = {'all': 1}
+        if cls.config['module'] == 'base':
+            ooconfig.setdefault('update', {})
+            ooconfig['update'].update({'base': 1})
         cls.openerp = OpenERPService(**ooconfig)
         cls.drop_database = False
         if not cls.openerp.db_name:
