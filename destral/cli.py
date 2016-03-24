@@ -57,12 +57,6 @@ def destral(modules, tests):
         # Module exists but there is an error show the error
         if module_exists(tests_module) is None:
             importlib.import_module(tests_module)
-            # Clean report from netsvc due importing and assert on
-            # server/bin/report/interface.py:50
-            import netsvc
-            for k in netsvc.SERVICES.keys():
-                if k.startswith('report.'):
-                    del netsvc.SERVICES[k]
         if tests:
             tests = ['{}.{}'.format(tests_module, t) for t in tests]
             suite = unittest.TestLoader().loadTestsFromNames(tests)
@@ -74,6 +68,12 @@ def destral(modules, tests):
                 suite = unittest.TestSuite()
         if not suite.countTestCases():
             suite = unittest.TestLoader().loadTestsFromName('destral.testing')
+        # Clean report from netsvc due importing and assert on
+        # server/bin/report/interface.py:50
+        import netsvc
+        for k in netsvc.SERVICES.keys():
+            if k.startswith('report.'):
+                del netsvc.SERVICES[k]
         result = unittest.TextTestRunner(verbosity=2).run(suite)
         if not result.wasSuccessful():
             results.append(False)
