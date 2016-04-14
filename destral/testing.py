@@ -14,6 +14,8 @@ class OOTestCase(unittest.TestCase):
     """
 
     require_demo_data = False
+    """Require demo data to run the tests.
+    """
 
     @property
     def database(self):
