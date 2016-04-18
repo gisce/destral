@@ -25,12 +25,12 @@ def destral(modules, tests):
     if not modules:
         ci_pull_request = os.environ.get('CI_PULL_REQUEST')
         if ci_pull_request:
-
-            req = urllib2.Request(
-                'https://api.github.com/repos/{repo}/pulls/{pr_number}'.format(
+            logger.info('Getting URL: https://api.github.com/repos/{repo}/pulls/{pr_number}'.format(
                     repo=os.environ.get('CI_REPO'),
                     pr_number=os.environ.get('CI_PULL_REQUEST')
-                ),
+                ))
+            req = urllib2.Request(
+                url,
                 headers={
                     'Authorization': 'token {0}'.format(
                         os.environ.get('GITHUB_TOKEN')
