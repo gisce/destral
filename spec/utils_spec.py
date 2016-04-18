@@ -1,0 +1,141 @@
+# coding=utf-8
+from destral.utils import *
+from expects import *
+
+
+with description('With a diff'):
+    with it('has to get the files modified'):
+        diff = """
+diff --git a/oorq/decorators.py b/oorq/decorators.py
+index 5c7b912..48c25a1 100644
+--- a/oorq/decorators.py
++++ b/oorq/decorators.py
+@@ -35,7 +35,7 @@ def __call__(self, f):
+         def f_job(*args, **kwargs):
+             redis_conn = setup_redis_connection()
+             current_job = get_current_job()
+-            if not args[-1] == token and not current_job and self.async:
++            if not args[-1] == token and self.async:
+                 # Add the token as a last argument
+                 args += (token,)
+                 # Default arguments
+@@ -49,11 +49,15 @@ def f_job(*args, **kwargs):
+                 conf_attrs = dict(
+                     [(attr, value) for attr, value in config.options.items()]
+                 )
+-                job = q.enqueue(execute, conf_attrs, dbname, uid, osv_object,
+-                                fname, *args[3:], **kwargs)
+-                hash = set_hash_job(job)
+-                log('Enqueued job (id:%s): [%s] pool(%s).%s%s'
+-                    % (job.id, dbname, osv_object, fname, args[2:]))
++                job_args = (
++                    conf_attrs, dbname, uid, osv_object, fname
++                ) + args[3:]
++                job_kwargs = kwargs
++                job = q.enqueue(execute, depends_on=current_job, args=job_args,
++                                kwargs=job_kwargs)
++                set_hash_job(job)
++                log('Enqueued job (id:%s) on queue %s: [%s] pool(%s).%s%s'
++                    % (job.id, q.name, dbname, osv_object, fname, args[2:]))
+                 return job
+             else:
+                 # Remove the token
+@@ -81,7 +85,7 @@ def __call__(self, f):
+
+         def f_job(*args, **kwargs):
+             current_job = get_current_job()
+-            if not args[-1] == token and not current_job and self.async:
++            if not args[-1] == token and self.async:
+                 # Add the token as a last argument
+                 args += (token,)
+                 # Default arguments
+@@ -113,12 +117,16 @@ def f_job(*args, **kwargs):
+                                      size=self.chunk_size)
+                 for idx, chunk in enumerate(chunks):
+                     args[3] = chunk
+-                    job = q.enqueue(task, conf_attrs, dbname, uid, osv_object,
+-                                    fname, *args[3:], **kwargs)
+-                    hash =  set_hash_job(job)
+-                    log('Enqueued split job (%s/%s) in %s mode (id:%s): [%s] '
+-                        'pool(%s).%s%s' % (
+-                            idx + 1, len(chunks), mode, job.id,
++                    job_args = [
++                        conf_attrs, dbname, uid, osv_object, fname
++                    ] + args[3:]
++                    job_kwargs = kwargs
++                    job = q.enqueue(task, depends_on=current_job, args=job_args,
++                                    kwargs=job_kwargs)
++                    set_hash_job(job)
++                    log('Enqueued split job (%s/%s) on queue %s in %s mode '
++                        '(id:%s): [%s] pool(%s).%s%s' % (
++                            idx + 1, len(chunks), q.name, mode, job.id,
+                             dbname, osv_object, fname, tuple(args[2:])
+                         )
+                     )
+diff --git a/oorq/oorq.py b/oorq/oorq.py
+index dd9d69d..ad5fd6d 100644
+--- a/oorq/oorq.py
++++ b/oorq/oorq.py
+@@ -31,6 +31,7 @@ def set_hash_job(job):
+     job.save()
+     return hash
+
++
+ class JobsPool(object):
+     def __init__(self):
+         self.jobs = []
+@@ -79,6 +80,7 @@ def serialize_date(dt):
+         return False
+     return dt.strftime('%Y-%m-%d %H:%M:%S')
+
++
+ def sql_db_dsn(db_name):
+     import tools
+     _dsn = ''
+diff --git a/oorq/tests/test_oorq/partner.py b/oorq/tests/test_oorq/partner.py
+index cded784..4d8676d 100644
+--- a/oorq/tests/test_oorq/partner.py
++++ b/oorq/tests/test_oorq/partner.py
+@@ -17,6 +17,10 @@ def test_write_split_size(self, cursor, uid, ids, vals, context=None):
+         self.write_split_size(cursor, uid, ids, vals, context)
+         return True
+
++    def test_dependency_job(self, cursor, uid, ids, vals, context=None):
++        self.dependency_job(cursor, uid, ids, vals, context=context)
++        return True
++
+     @job(async=True, queue='default')
+     def write_async(self, cr, user, ids, vals, context=None):
+         #TODO: process before updating resource
+@@ -35,4 +39,13 @@ def write_split_size(self, cursor, uid, ids, vals, context=None):
+         res = super(ResPartner, self).write(cursor, uid, ids, vals, context)
+         return res
+
++    @job(queue='dependency')
++    def dependency_job(self, cursor, uid, ids, vals, context=None):
++        print "First job"
++        import time
++        self.write_async(cursor, uid, ids, vals, context=context)
++        print "I'm working and not affected for the subjob"
++        time.sleep(5)
++        return True
++
+ ResPartner()
+diff --git a/requirements.txt b/requirements.txt
+index 37a6921..1071042 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -1,2 +1,2 @@
+-rq
+-rq-dashboard
+\ No newline at end of file
++rq>=0.5.6
++rq-dashboard
+        """
+        paths = find_files(diff)
+        expect(paths).to(contain_only(
+            'oorq/decorators.py',
+            'oorq/oorq.py',
+            'oorq/tests/test_oorq/partner.py',
+            'requirements.txt'
+        ))
