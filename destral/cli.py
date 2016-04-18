@@ -40,7 +40,7 @@ def destral(modules, tests):
             })
             f = urllib2.urlopen(req)
             paths = find_files(f.read())
-            logger.info('Getting files from PR: {0}: {1}'.format(
+            logger.info('Files from PR: {0}: {1}'.format(
                 ci_pull_request, ', '.join(paths)
             ))
         else:
