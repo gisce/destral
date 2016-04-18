@@ -24,7 +24,8 @@ def destral(modules, tests):
     service = OpenERPService()
     if not modules:
         ci_pull_request = os.environ.get('CI_PULL_REQUEST')
-        if ci_pull_request:
+        token = os.environ.get('GITHUB_TOKEN')
+        if ci_pull_request and token:
             url = 'https://api.github.com/repos/{repo}/pulls/{pr_number}'.format(
                     repo=os.environ.get('CI_REPO'),
                     pr_number=ci_pull_request
@@ -32,9 +33,7 @@ def destral(modules, tests):
             req = urllib2.Request(
                 url,
                 headers={
-                    'Authorization': 'token {0}'.format(
-                        os.environ.get('GITHUB_TOKEN')
-                    ),
+                    'Authorization': 'token {0}'.format(token),
                     'Accept': 'application/vnd.github.patch'
             })
             f = urllib2.urlopen(req)
