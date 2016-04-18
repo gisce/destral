@@ -4,9 +4,10 @@ import sys
 import subprocess
 import unittest
 import logging
+import urllib2
 
 import click
-from destral.utils import detect_module, module_exists, get_dependencies
+from destral.utils import *
 from destral.openerp import OpenERPService
 
 
@@ -22,10 +23,26 @@ def destral(modules, tests):
     sys.argv = sys.argv[:1]
     service = OpenERPService()
     if not modules:
-        paths = subprocess.check_output([
-            "git", "diff", "--name-only", "HEAD~1..HEAD"
-        ])
-        paths = [x for x in paths.split('\n') if x]
+        ci_pull_request = os.environ.get('CI_PULL_REQUEST')
+        if ci_pull_request:
+            req = urllib2.Request(
+                'https://api.github.com/repos/{repo}/pulls/{pr_number}'.format(
+                    repo=os.environ.get('CI_REPO'),
+                    pr_number=os.environ.get('CI_PULL_REQUEST')
+                ),
+                headers={
+                    'Authorization': 'token {0}'.format(
+                        os.environ.get('GITHUB_TOKEN')
+                    ),
+                    'Accept': 'application/vnd.github.patch'
+            })
+            f = urllib2.urlopen(req)
+            paths = find_files(f.read())
+        else:
+            paths = subprocess.check_output([
+                "git", "diff", "--name-only", "HEAD~1..HEAD"
+            ])
+            paths = [x for x in paths.split('\n') if x]
         modules_to_test = []
         for path in paths:
             module = detect_module(path)

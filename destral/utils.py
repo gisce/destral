@@ -1,6 +1,15 @@
 from ast import literal_eval
 import imp
 import os
+import re
+
+__all__ = [
+    'update_config',
+    'detect_module',
+    'module_exists',
+    'get_dependencies',
+    'find_files'
+]
 
 
 def update_config(config, **kwargs):
@@ -92,3 +101,17 @@ def get_dependencies(module, addons_path=None, deps=None):
         deps += get_dependencies(dep, addons_path, deps)
 
     return list(set(deps))
+
+
+def find_files(diff):
+    """Return all the files implicated in a diff
+    """
+    paths = []
+    for line in re.findall("--- .*|\+\+\+ .*", diff):
+        line = line.split(' ')[1]
+        if line.startswith('a/'):
+            line = line.lstrip('a/')
+        elif line.startswith('b/'):
+            line = line.lstrip('b/')
+        paths.append(line)
+    return list(set(paths))
