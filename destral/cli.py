@@ -24,10 +24,11 @@ def destral(modules, tests):
     service = OpenERPService()
     if not modules:
         ci_pull_request = os.environ.get('CI_PULL_REQUEST')
+        logger.info('CI_PULL_REQUEST: {0}'.format(ci_pull_request))
         if ci_pull_request:
             url = 'https://api.github.com/repos/{repo}/pulls/{pr_number}'.format(
                     repo=os.environ.get('CI_REPO'),
-                    pr_number=os.environ.get('CI_PULL_REQUEST')
+                    pr_number=ci_pull_request
                 )
             logger.info('Getting URL: {0}'.format(url))
             req = urllib2.Request(
