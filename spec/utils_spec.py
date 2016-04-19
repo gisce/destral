@@ -22,5 +22,6 @@ with description('With a diff'):
             'oorq/decorators.py',
             'oorq/oorq.py',
             'oorq/tests/test_oorq/partner.py',
-            'requirements.txt'
+            'requirements.txt',
+            'addons/foo/bar.txt'
         ))

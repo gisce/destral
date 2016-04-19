@@ -111,12 +111,8 @@ def find_files(diff):
     """Return all the files implicated in a diff
     """
     paths = []
-    for line in re.findall("--- .*|\+\+\+ .*", diff):
-        line = line.split(' ')[1]
-        if line.startswith('a/'):
-            line = line.lstrip('a/')
-        elif line.startswith('b/'):
-            line = line.lstrip('b/')
+    for line in re.findall("--- a/.*|\+\+\+ b/.*", diff):
+        line = '/'.join(line.split('/')[1:])
         paths.append(line)
     return list(set(paths))
 

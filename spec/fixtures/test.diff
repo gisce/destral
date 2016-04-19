@@ -123,3 +123,10 @@ index 37a6921..1071042 100644
 \ No newline at end of file
 +rq>=0.5.6
 +rq-dashboard
+diff --git a/addons/foo/bar.txt b/addons/foo/bar.txt
+index 37a6921..1071042 100644
+--- a/addons/foo/bar.txt
++++ b/addons/foo/bar.txt
+@@ -1,2 +1,2 @@
+-niu
++nau
