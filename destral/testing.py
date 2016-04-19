@@ -1,8 +1,10 @@
+import importlib
 import logging
 import unittest
 
 from destral.openerp import OpenERPService
 from destral.transaction import Transaction
+from destral.utils import module_exists
 from osconf import config_from_environment
 
 
@@ -104,3 +106,35 @@ class OOTestCase(unittest.TestCase):
         if cls.drop_database:
             cls.openerp.drop_database()
             cls.openerp.db_name = False
+
+
+def get_unittest_suite(module, tests=None):
+    """Get the unittest suit for a module
+    """
+    tests_module = 'addons.{}.tests'.format(module)
+    logger.debug('Test module: %s', tests_module)
+    # Module exists but there is an error show the error
+    if module_exists(tests_module) is None:
+        importlib.import_module(tests_module)
+    if tests:
+        tests = ['{}.{}'.format(tests_module, t) for t in tests]
+        suite = unittest.TestLoader().loadTestsFromNames(tests)
+    else:
+        try:
+            suite = unittest.TestLoader().loadTestsFromName(tests_module)
+        except AttributeError as e:
+            logger.debug('Test suits not found...%s', e)
+            suite = unittest.TestSuite()
+    if not suite.countTestCases():
+        suite = unittest.TestLoader().loadTestsFromName('destral.testing')
+    return suite
+
+
+def run_unittest_suite(suite):
+    """Run test suite
+    """
+    import netsvc
+    for k in netsvc.SERVICES.keys():
+        if k.startswith('report.'):
+            del netsvc.SERVICES[k]
+    return unittest.TextTestRunner(verbosity=2).run(suite)

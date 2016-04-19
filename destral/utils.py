@@ -1,14 +1,18 @@
 from ast import literal_eval
 import imp
+import logging
 import os
 import re
+import sys
+import subprocess
 
 __all__ = [
     'update_config',
     'detect_module',
     'module_exists',
     'get_dependencies',
-    'find_files'
+    'find_files',
+    'install_requirements'
 ]
 
 
@@ -115,3 +119,21 @@ def find_files(diff):
             line = line.lstrip('b/')
         paths.append(line)
     return list(set(paths))
+
+
+def install_requirements(module, addons_path):
+    """Install module requirements and its dependecies
+    """
+    logger = logging.getLogger('destral.utils')
+    modules_requirements = get_dependencies(module, addons_path)
+    modules_requirements.append(module)
+    for module_requirements in modules_requirements:
+        req = os.path.join(
+            addons_path,
+            module_requirements,
+            'requirements.txt'
+        )
+        pip = os.path.join(sys.prefix, 'bin', 'pip')
+        if os.path.exists(req) and os.path.exists(pip):
+            logger.info('Requirements file %s found. Installing...', req)
+            subprocess.check_call([pip, "install", "-r", req])
