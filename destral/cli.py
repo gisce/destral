@@ -1,13 +1,12 @@
-import importlib
 import os
 import sys
 import subprocess
-import unittest
 import logging
 import urllib2
 
 import click
 from destral.utils import *
+from destral.testing import run_unittest_suite, get_unittest_suite
 from destral.openerp import OpenERPService
 
 
@@ -51,55 +50,21 @@ def destral(modules, tests):
             module = detect_module(path)
             if module and module not in modules_to_test:
                 modules_to_test.append(module)
-
     else:
         modules_to_test = modules[:]
 
     results = []
     addons_path = service.config['addons_path']
     for module in modules_to_test:
-        modules_requirements = get_dependencies(module, addons_path)
-        modules_requirements.append(module)
-        for module_requirements in modules_requirements:
-            req = os.path.join(
-                service.config['addons_path'],
-                module_requirements,
-                'requirements.txt'
-            )
-            pip = os.path.join(sys.prefix, 'bin', 'pip')
-            if os.path.exists(req) and os.path.exists(pip):
-                logger.info('Requirements file %s found. Installing...', req)
-                subprocess.check_call([pip, "install", "-r", req])
+        install_requirements(module, addons_path)
         logger.info('Testing module %s', module)
         os.environ['DESTRAL_MODULE'] = module
-        tests_module = 'addons.{}.tests'.format(module)
-        logger.debug('Test module: %s', tests_module)
-        # Module exists but there is an error show the error
-        if module_exists(tests_module) is None:
-            importlib.import_module(tests_module)
-        if tests:
-            tests = ['{}.{}'.format(tests_module, t) for t in tests]
-            suite = unittest.TestLoader().loadTestsFromNames(tests)
-        else:
-            try:
-                suite = unittest.TestLoader().loadTestsFromName(tests_module)
-            except AttributeError, e:
-                logger.debug('Test suits not found...%s', e)
-                suite = unittest.TestSuite()
-        if not suite.countTestCases():
-            suite = unittest.TestLoader().loadTestsFromName('destral.testing')
-        # Clean report from netsvc due importing and assert on
-        # server/bin/report/interface.py:50
-        import netsvc
-        for k in netsvc.SERVICES.keys():
-            if k.startswith('report.'):
-                del netsvc.SERVICES[k]
-        result = unittest.TextTestRunner(verbosity=2).run(suite)
+        suite = get_unittest_suite(module, tests)
+        result = run_unittest_suite(suite)
         if not result.wasSuccessful():
             results.append(False)
         else:
             results.append(True)
-
     if not all(results):
         sys.exit(1)
 
