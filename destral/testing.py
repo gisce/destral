@@ -98,6 +98,37 @@ class OOTestCase(unittest.TestCase):
                         logger.info('Testing main view %s (id: %s)',
                                     view.name, view.id)
 
+    def test_access_rules(self):
+        """Test access rules for all the models created in the module
+        """
+        logger.info('Testing access rules for module %s', self.config['module'])
+        imd_obj = self.openerp.pool.get('ir.model.data')
+        access_obj = self.openerp.pool.get('ir.model.access')
+        no_access = []
+        with Transaction().start(self.database) as txn:
+            cursor = txn.cursor
+            uid = txn.user
+            imd_ids = imd_obj.search(txn.cursor, txn.user, [
+                ('model', '=', 'ir.model'),
+                ('module', '=', self.config['module'])
+            ])
+            if imd_ids:
+                for imd in imd_obj.browse(txn.cursor, txn.user, imd_ids):
+                    model_id = imd.res_id
+                    access_ids = access_obj.search(cursor, uid, [
+                        ('model_id.id', '=', model_id)
+                    ])
+                    if not access_ids:
+                        no_access.append(
+                            '.'.join(imd.name.split('_')[1:])
+                        )
+
+        if no_access:
+            self.fail(
+                "Models: {0} doesn't have any access rules defined".format(
+                    ', '.join(no_access)
+            ))
+
     @classmethod
     def tearDownClass(cls):
         """Tear down the test.
