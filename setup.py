@@ -9,7 +9,8 @@ setup(
     install_requires=[
         'osconf',
         'expects',
-        'click'
+        'click',
+        'mamba'
     ],
     license='GNU GPLv3',
     author='GISCE-TI, S.L.',

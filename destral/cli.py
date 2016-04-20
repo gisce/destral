@@ -7,6 +7,7 @@ import urllib2
 import click
 from destral.utils import *
 from destral.testing import run_unittest_suite, get_unittest_suite
+from destral.testing import run_spec_suite, get_spec_suite
 from destral.openerp import OpenERPService
 
 
@@ -57,14 +58,17 @@ def destral(modules, tests):
     addons_path = service.config['addons_path']
     for module in modules_to_test:
         install_requirements(module, addons_path)
-        logger.info('Testing module %s', module)
+        spec_suite = get_spec_suite(os.path.join(addons_path, module))
+        if spec_suite:
+            logger.info('Spec testing module %s', module)
+            report = run_spec_suite(spec_suite)
+            results.append(not len(report.failed_examples) > 0)
+        logger.info('Unit testing module %s', module)
         os.environ['DESTRAL_MODULE'] = module
         suite = get_unittest_suite(module, tests)
         result = run_unittest_suite(suite)
-        if not result.wasSuccessful():
-            results.append(False)
-        else:
-            results.append(True)
+        results.append(result.wasSuccessful())
+
     if not all(results):
         sys.exit(1)
 
