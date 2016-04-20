@@ -1,11 +1,13 @@
 import importlib
 import logging
+import os
 import unittest
 
 from destral.openerp import OpenERPService
 from destral.transaction import Transaction
 from destral.utils import module_exists
 from osconf import config_from_environment
+from mamba import application_factory
 
 
 logger = logging.getLogger('destral.testing')
@@ -138,3 +140,37 @@ def run_unittest_suite(suite):
         if k.startswith('report.'):
             del netsvc.SERVICES[k]
     return unittest.TextTestRunner(verbosity=2).run(suite)
+
+
+def get_spec_suite(module):
+    """
+    Get spec suite to run Mamba
+    :param module: Module to get the spec suite
+    :return: suite
+    """
+    spec_dir = os.path.join(module, 'spec')
+    if os.path.exists(spec_dir):
+        # Create a fake arguments object
+        arguments = type('Arguments', (object, ), {})
+        arguments.specs = [spec_dir]
+        arguments.slow = 0.075
+        arguments.enable_coverage = False
+        arguments.format = 'progress'
+        arguments.no_color = True
+        arguments.watch = False
+        factory = application_factory.ApplicationFactory(arguments)
+        logger.info('Mamba application factory created for specs: {0}'.format(
+            spec_dir
+        ))
+        return factory.create_runner()
+    return None
+
+
+def run_spec_suite(suite):
+    """
+    Run Spec suite
+    :param suite: mamba Runner
+    :return:
+    """
+    suite.run()
+    return suite.reporter
