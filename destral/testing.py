@@ -166,6 +166,7 @@ def get_unittest_suite(module, tests=None):
 def run_unittest_suite(suite):
     """Run test suite
     """
+    logger.info('Running test suit: {0}'.format(suite))
     import netsvc
     for k in netsvc.SERVICES.keys():
         if k.startswith('report.'):
