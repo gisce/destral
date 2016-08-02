@@ -52,7 +52,7 @@ class OOTestCase(unittest.TestCase):
                 cls.config['use_template']
             )
             cls.drop_database = True
-            cls.install_module()
+        cls.install_module()
 
     @classmethod
     def install_module(cls):

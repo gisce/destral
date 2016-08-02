@@ -1,1 +1,1 @@
-doublex-expects
+doublex-expects>0.6
