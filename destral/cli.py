@@ -56,6 +56,12 @@ def destral(modules, tests):
 
     results = []
     addons_path = service.config['addons_path']
+    root_path = service.config['root_path']
+    server_spec_suite = get_spec_suite(root_path)
+    if server_spec_suite:
+        logging.info('Spec testing for server')
+        report = run_spec_suite(server_spec_suite)
+        results.append(not len(report.failed_examples) > 0)
     for module in modules_to_test:
         install_requirements(module, addons_path)
         spec_suite = get_spec_suite(os.path.join(addons_path, module))
