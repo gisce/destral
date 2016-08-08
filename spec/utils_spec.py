@@ -1,15 +1,12 @@
 # coding=utf-8
-import os
+from __future__ import absolute_import
+
 
 from destral.utils import *
 from expects import *
 
+from .fixtures import get_fixture
 
-_ROOT = os.path.abspath(os.path.dirname(__file__))
-
-
-def get_fixture(*args):
-    return os.path.join(_ROOT, 'fixtures', *args)
 
 
 with description('With a diff'):
