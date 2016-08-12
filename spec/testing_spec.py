@@ -3,6 +3,7 @@ import os
 import tempfile
 
 from destral.testing import get_spec_suite, run_spec_suite
+from destral.patch import RestorePatchedRegisterAll
 from expects import *
 from doublex_expects import *
 from doublex import Spy, method_returning
@@ -31,3 +32,23 @@ with description('Fixture#Mamba support'):
         result = run_spec_suite(suite)
         expect(result).to(be_a(Reporter))
         expect(suite.run).to(have_been_called)
+
+
+with description('When running tests'):
+    with it('must be reload report.interface'):
+        import report
+
+        orig = id(report.interface.register_all)
+
+        def new_register_all(db):
+            pass
+
+        with RestorePatchedRegisterAll():
+
+            report.interface.register_all = new_register_all
+            expect(id(report.interface.register_all)).to(
+                equal(id(new_register_all))
+            )
+
+        expect(id(report.interface.register_all)).to(equal(orig))
+
