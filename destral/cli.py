@@ -9,6 +9,7 @@ from destral.utils import *
 from destral.testing import run_unittest_suite, get_unittest_suite
 from destral.testing import run_spec_suite, get_spec_suite
 from destral.openerp import OpenERPService
+from destral.patch import RestorePatchedRegisterAll
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -63,17 +64,18 @@ def destral(modules, tests):
         report = run_spec_suite(server_spec_suite)
         results.append(not len(report.failed_examples) > 0)
     for module in modules_to_test:
-        install_requirements(module, addons_path)
-        spec_suite = get_spec_suite(os.path.join(addons_path, module))
-        if spec_suite:
-            logger.info('Spec testing module %s', module)
-            report = run_spec_suite(spec_suite)
-            results.append(not len(report.failed_examples) > 0)
-        logger.info('Unit testing module %s', module)
-        os.environ['DESTRAL_MODULE'] = module
-        suite = get_unittest_suite(module, tests)
-        result = run_unittest_suite(suite)
-        results.append(result.wasSuccessful())
+        with RestorePatchedRegisterAll():
+            install_requirements(module, addons_path)
+            spec_suite = get_spec_suite(os.path.join(addons_path, module))
+            if spec_suite:
+                logger.info('Spec testing module %s', module)
+                report = run_spec_suite(spec_suite)
+                results.append(not len(report.failed_examples) > 0)
+            logger.info('Unit testing module %s', module)
+            os.environ['DESTRAL_MODULE'] = module
+            suite = get_unittest_suite(module, tests)
+            result = run_unittest_suite(suite)
+            results.append(result.wasSuccessful())
 
     if not all(results):
         sys.exit(1)
