@@ -36,19 +36,32 @@ with description('Fixture#Mamba support'):
 
 with description('When running tests'):
     with it('must be reload report.interface'):
+        import sys
+
+        class Mock(object):
+            pass
+
+        fake_report = Mock()
+        fake_report.interface = Mock()
+        fake_report.interface.register_all = lambda x: 'Foo'
+
+        sys.modules['report'] = fake_report
+
         import report
 
         orig = id(report.interface.register_all)
 
-        def new_register_all(db):
-            pass
+        import logging
+        logging.basicConfig(level=logging.INFO)
 
-        with RestorePatchedRegisterAll():
+        with RestorePatchedRegisterAll() as restored:
+            expect(id(restored.orig)).to(equal(orig))
+
+
+            def new_register_all(db):
+                pass
 
             report.interface.register_all = new_register_all
-            expect(id(report.interface.register_all)).to(
-                equal(id(new_register_all))
-            )
 
-        expect(id(report.interface.register_all)).to(equal(orig))
+
 

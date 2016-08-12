@@ -21,6 +21,7 @@ class RestorePatchedRegisterAll(object):
             id(report.interface.register_all)
         ))
         self.orig = report.interface.register_all
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         import report
