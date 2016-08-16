@@ -13,6 +13,61 @@ from mamba import application_factory
 logger = logging.getLogger('destral.testing')
 
 
+class OOTestSuite(unittest.TestSuite):
+
+    def __init__(self, tests=()):
+        super(OOTestSuite, self).__init__(tests)
+        self.config = config_from_environment(
+            'DESTRAL', ['module'], use_template=True
+        )
+        ooconfig = {}
+        self.config['use_template'] = False
+        ooconfig['demo'] = {'all': 1}
+        if self.config['module'] == 'base':
+            ooconfig.setdefault('update', {})
+            ooconfig['update'].update({'base': 1})
+        self.openerp = OpenERPService(**ooconfig)
+        self.drop_database = False
+
+    def run(self, result, debug=False):
+        """Run the test suite
+
+        * Sets the config using environment variables prefixed with `DESTRAL_`.
+        * Creates a new OpenERP service.
+        * Installs the module to test if a database is not defined.
+        """
+        module_suite = not result._testRunEntered
+        if module_suite:
+            if not self.openerp.db_name:
+                self.openerp.db_name = self.openerp.create_database(
+                    self.config['use_template']
+                )
+                result.db_name = self.openerp.db_name
+                self.drop_database = True
+            self.openerp.install_module(self.config['module'])
+        else:
+            self.openerp.db_name = result.db_name
+
+        res = super(OOTestSuite, self).run(result, debug)
+
+        module_suite = not result._testRunEntered
+        if module_suite:
+            if self.drop_database:
+                self.openerp.drop_database()
+                self.openerp.db_name = False
+        return res
+
+    def _handleClassSetUp(self, test, result):
+        test_class = test.__class__
+        test_class.openerp = self.openerp
+        test_class.config = self.config
+        super(OOTestSuite, self)._handleClassSetUp(test, result)
+
+
+class OOTestLoader(unittest.TestLoader):
+    suiteClass = OOTestSuite
+
+
 class OOTestCase(unittest.TestCase):
     """Base class to inherit test cases from for OpenERP Testing Framework.
     """
@@ -27,38 +82,8 @@ class OOTestCase(unittest.TestCase):
         """
         return self.openerp.db_name
 
-    @classmethod
-    def setUpClass(cls):
-        """Set up the test
 
-        * Sets the config using environment variables prefixed with `DESTRAL_`.
-        * Creates a new OpenERP service.
-        * Installs the module to test if a database is not defined.
-        """
-        cls.config = config_from_environment(
-            'DESTRAL', ['module'], use_template=True
-        )
-        ooconfig = {}
-        if cls.require_demo_data:
-            cls.config['use_template'] = False
-            ooconfig['demo'] = {'all': 1}
-        if cls.config['module'] == 'base':
-            ooconfig.setdefault('update', {})
-            ooconfig['update'].update({'base': 1})
-        cls.openerp = OpenERPService(**ooconfig)
-        cls.drop_database = False
-        if not cls.openerp.db_name:
-            cls.openerp.db_name = cls.openerp.create_database(
-                cls.config['use_template']
-            )
-            cls.drop_database = True
-        cls.install_module()
-
-    @classmethod
-    def install_module(cls):
-        """Install the module to test.
-        """
-        cls.openerp.install_module(cls.config['module'])
+class OOBaseTests(OOTestCase):
 
     def test_all_views(self):
         """Tests all views defined in the module.
@@ -129,17 +154,6 @@ class OOTestCase(unittest.TestCase):
                     ', '.join(no_access)
             ))
 
-    @classmethod
-    def tearDownClass(cls):
-        """Tear down the test.
-
-        If database is not defined, the database created for the test is
-        deleted
-        """
-        if cls.drop_database:
-            cls.openerp.drop_database()
-            cls.openerp.db_name = False
-
 
 def get_unittest_suite(module, tests=None):
     """Get the unittest suit for a module
@@ -155,15 +169,16 @@ def get_unittest_suite(module, tests=None):
         importlib.import_module(tests_module)
     if tests:
         tests = ['{}.{}'.format(tests_module, t) for t in tests]
-        suite = unittest.TestLoader().loadTestsFromNames(tests)
+        suite = OOTestLoader().loadTestsFromNames(tests)
     else:
         try:
-            suite = unittest.TestLoader().loadTestsFromName(tests_module)
+            suite = OOTestLoader().loadTestsFromName(tests_module)
+            suite.addTests(OOTestLoader().loadTestsFromTestCase(OOBaseTests))
         except AttributeError as e:
             logger.debug('Test suits not found...%s', e)
-            suite = unittest.TestSuite()
+            suite = OOTestSuite()
     if not suite.countTestCases():
-        suite = unittest.TestLoader().loadTestsFromName('destral.testing')
+        suite = OOTestLoader().loadTestsFromName('destral.testing')
     return suite
 
 
