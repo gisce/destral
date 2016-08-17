@@ -175,11 +175,11 @@ def get_unittest_suite(module, tests=None):
             suite = OOTestSuite()
     if not suite.countTestCases():
         suite = OOTestLoader().loadTestsFromName('destral.testing')
-    # Clean reports to avoid assert checking if exists
+    # Clean netsvc Services
     import netsvc
-    for k in netsvc.SERVICES.keys():
-        if k.startswith('report.'):
-            del netsvc.SERVICES[k]
+    netsvc.SERVICES.clear()
+    from workflow.wkf_service import workflow_service
+    workflow_service()
     return suite
 
 
