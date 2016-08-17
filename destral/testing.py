@@ -161,11 +161,6 @@ def get_unittest_suite(module, tests=None):
     """
     tests_module = 'addons.{}.tests'.format(module)
     logger.debug('Test module: %s', tests_module)
-    # Module exists but there is an error show the error
-    import netsvc
-    for k in netsvc.SERVICES.keys():
-        if k.startswith('report.'):
-            del netsvc.SERVICES[k]
     if module_exists(tests_module) is None:
         importlib.import_module(tests_module)
     if tests:
@@ -180,6 +175,11 @@ def get_unittest_suite(module, tests=None):
             suite = OOTestSuite()
     if not suite.countTestCases():
         suite = OOTestLoader().loadTestsFromName('destral.testing')
+    # Clean reports to avoid assert checking if exists
+    import netsvc
+    for k in netsvc.SERVICES.keys():
+        if k.startswith('report.'):
+            del netsvc.SERVICES[k]
     return suite
 
 
@@ -187,10 +187,6 @@ def run_unittest_suite(suite):
     """Run test suite
     """
     logger.info('Running test suit: {0}'.format(suite))
-    import netsvc
-    for k in netsvc.SERVICES.keys():
-        if k.startswith('report.'):
-            del netsvc.SERVICES[k]
     return unittest.TextTestRunner(verbosity=2).run(suite)
 
 
