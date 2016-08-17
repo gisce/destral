@@ -42,8 +42,9 @@ class OOTestSuite(unittest.TestSuite):
                 self.openerp.db_name = self.openerp.create_database(
                     self.config['use_template']
                 )
-                result.db_name = self.openerp.db_name
+
                 self.drop_database = True
+            result.db_name = self.openerp.db_name
             self.openerp.install_module(self.config['module'])
         else:
             self.openerp.db_name = result.db_name
