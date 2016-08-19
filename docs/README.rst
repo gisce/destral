@@ -20,6 +20,7 @@ If no specific tests are defined into the module, *destral* will test:
 
   * Correct installation of the module.
   * All the views defined in the module are ok.
+  * Definition of access rules for all the models of the module
 
 
 Configuring destral
