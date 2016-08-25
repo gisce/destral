@@ -11,8 +11,9 @@ from destral.testing import run_spec_suite, get_spec_suite
 from destral.openerp import OpenERPService
 from destral.patch import RestorePatchedRegisterAll
 
+LOG_FORMAT = '%(asctime)s:{0}'.format(logging.BASIC_FORMAT)
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 
 logger = logging.getLogger('destral.cli')
 
