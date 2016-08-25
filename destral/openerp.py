@@ -3,7 +3,6 @@ import time
 
 from osconf import config_from_environment
 from destral.utils import update_config
-from destral.patch import patch_root_logger
 
 
 logger = logging.getLogger('destral.openerp')
@@ -28,7 +27,6 @@ class OpenERPService(object):
 
         :param \**kwargs: keyword arguments passed to the config
         """
-        patch_root_logger()
         config = config_from_environment('OPENERP', [], **kwargs)
         import netsvc
         import tools
