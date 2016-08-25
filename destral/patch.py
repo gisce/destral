@@ -4,15 +4,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def patch_root_logger():
-    """Patch openerp server logging.
-    """
-    if 'openerp' not in logging.Logger.manager.loggerDict:
-        logger = logging.getLogger()
-        logger.handlers = []
-        logging.basicConfig()
-
-
 class RestorePatchedRegisterAll(object):
     def __enter__(self):
         import report
