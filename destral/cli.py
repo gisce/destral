@@ -10,6 +10,7 @@ from destral.testing import run_unittest_suite, get_unittest_suite
 from destral.testing import run_spec_suite, get_spec_suite
 from destral.openerp import OpenERPService
 from destral.patch import RestorePatchedRegisterAll
+from destral.cover import OOCoverage
 
 LOG_FORMAT = '%(asctime)s:{0}'.format(logging.BASIC_FORMAT)
 
@@ -21,7 +22,8 @@ logger = logging.getLogger('destral.cli')
 @click.command()
 @click.option('--modules', '-m', multiple=True)
 @click.option('--tests', '-t', multiple=True)
-def destral(modules, tests):
+@click.option('--enable-coverage', type=click.BOOL, default=False, is_flag=True)
+def destral(modules, tests, enable_coverage=None):
     sys.argv = sys.argv[:1]
     service = OpenERPService()
     if not modules:
@@ -59,24 +61,36 @@ def destral(modules, tests):
     results = []
     addons_path = service.config['addons_path']
     root_path = service.config['root_path']
+
+    coverage = OOCoverage(
+        source=coverage_modules_path(modules_to_test, addons_path)
+    )
+    coverage.enabled = enable_coverage
+
     server_spec_suite = get_spec_suite(root_path)
     if server_spec_suite:
         logging.info('Spec testing for server')
         report = run_spec_suite(server_spec_suite)
         results.append(not len(report.failed_examples) > 0)
+
     for module in modules_to_test:
         with RestorePatchedRegisterAll():
             install_requirements(module, addons_path)
             spec_suite = get_spec_suite(os.path.join(addons_path, module))
             if spec_suite:
                 logger.info('Spec testing module %s', module)
+                coverage.start()
                 report = run_spec_suite(spec_suite)
+                coverage.stop()
                 results.append(not len(report.failed_examples) > 0)
             logger.info('Unit testing module %s', module)
             os.environ['DESTRAL_MODULE'] = module
             suite = get_unittest_suite(module, tests)
+            coverage.start()
             result = run_unittest_suite(suite)
+            coverage.stop()
             results.append(result.wasSuccessful())
+        coverage.save()
 
     if not all(results):
         sys.exit(1)
