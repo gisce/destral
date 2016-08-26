@@ -10,7 +10,8 @@ setup(
         'osconf',
         'expects',
         'click',
-        'mamba'
+        'mamba',
+        'coverage'
     ],
     license='GNU GPLv3',
     author='GISCE-TI, S.L.',

@@ -12,7 +12,8 @@ __all__ = [
     'module_exists',
     'get_dependencies',
     'find_files',
-    'install_requirements'
+    'install_requirements',
+    'coverage_modules_path'
 ]
 
 
@@ -133,3 +134,10 @@ def install_requirements(module, addons_path):
         if os.path.exists(req) and os.path.exists(pip):
             logger.info('Requirements file %s found. Installing...', req)
             subprocess.check_call([pip, "install", "-r", req])
+
+
+def coverage_modules_path(modules_to_test, addons_path):
+    return [
+        os.path.relpath(os.path.realpath(os.path.join(addons_path, m))) for m in
+        modules_to_test
+    ]
