@@ -9,6 +9,7 @@ command are::
   Usage: destral [OPTIONS]
 
     Options:
+      --enable-coverage
       -m, --modules TEXT
       -t, --tests TEXT
       --help              Show this message and exit.
@@ -21,6 +22,11 @@ If no specific tests are defined into the module, *destral* will test:
   * Correct installation of the module.
   * All the views defined in the module are ok.
   * Definition of access rules for all the models of the module
+
+If you have run with the `--enable-coverage` option a `.coverage` file will be
+generated with the results and you can see the report executing::
+
+  $ coverage report
 
 
 Configuring destral

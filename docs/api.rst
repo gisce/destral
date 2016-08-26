@@ -31,3 +31,10 @@ destral.utils
 
 .. automodule:: destral.utils
    :members:
+
+
+destral.cover
+=============
+
+.. automodule:: destral.cover
+   :members:
