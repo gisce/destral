@@ -1,7 +1,10 @@
 # coding=utf-8
 from __future__ import absolute_import
+import logging
 
-from coverage import Coverage
+from coverage import Coverage, CoverageException
+
+logger = logging.getLogger('destral.coverage')
 
 
 class OOCoverage(Coverage):
@@ -19,4 +22,8 @@ class OOCoverage(Coverage):
 
     def report(self, *args, **kwargs):
         if self.enabled:
-            return super(OOCoverage, self).report(*args, **kwargs)
+            try:
+                return super(OOCoverage, self).report(*args, **kwargs)
+            except CoverageException as e:
+                logger.error(e)
+                return None
