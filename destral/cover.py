@@ -16,3 +16,7 @@ class OOCoverage(Coverage):
     def stop(self):
         if self.enabled:
             super(OOCoverage, self).stop()
+
+    def report(self, *args, **kwargs):
+        if self.enabled:
+            return super(OOCoverage, self).report(*args, **kwargs)
