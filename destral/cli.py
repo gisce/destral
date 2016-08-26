@@ -23,7 +23,8 @@ logger = logging.getLogger('destral.cli')
 @click.option('--modules', '-m', multiple=True)
 @click.option('--tests', '-t', multiple=True)
 @click.option('--enable-coverage', type=click.BOOL, default=False, is_flag=True)
-def destral(modules, tests, enable_coverage=None):
+@click.option('--report-coverage', type=click.BOOL, default=False, is_flag=True)
+def destral(modules, tests, enable_coverage=None, report_coverage=None):
     sys.argv = sys.argv[:1]
     service = OpenERPService()
     if not modules:
@@ -65,7 +66,7 @@ def destral(modules, tests, enable_coverage=None):
     coverage = OOCoverage(
         source=coverage_modules_path(modules_to_test, addons_path)
     )
-    coverage.enabled = enable_coverage
+    coverage.enabled = (enable_coverage or report_coverage)
 
     server_spec_suite = get_spec_suite(root_path)
     if server_spec_suite:
@@ -90,6 +91,9 @@ def destral(modules, tests, enable_coverage=None):
             result = run_unittest_suite(suite)
             coverage.stop()
             results.append(result.wasSuccessful())
+    if report_coverage:
+        coverage.report()
+    if enable_coverage:
         coverage.save()
 
     if not all(results):

@@ -10,6 +10,7 @@ command are::
 
     Options:
       --enable-coverage
+      --report-coverage
       -m, --modules TEXT
       -t, --tests TEXT
       --help              Show this message and exit.
