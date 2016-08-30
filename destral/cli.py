@@ -86,8 +86,8 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None):
                 results.append(not len(report.failed_examples) > 0)
             logger.info('Unit testing module %s', module)
             os.environ['DESTRAL_MODULE'] = module
-            suite = get_unittest_suite(module, tests)
             coverage.start()
+            suite = get_unittest_suite(module, tests)
             result = run_unittest_suite(suite)
             coverage.stop()
             results.append(result.wasSuccessful())
