@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='destral',
-    version='0.15.1',
+    version='0.15.2',
     packages=find_packages(),
     url='https://github.com/gisce/destral',
     install_requires=[
