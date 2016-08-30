@@ -52,7 +52,7 @@ class OpenERPService(object):
         """
         db_name = 'test_' + str(int(time.time()))
         import sql_db
-        conn = sql_db.db_connect('template1')
+        conn = sql_db.db_connect('postgres')
         cursor = conn.cursor()
         try:
             logger.info('Creating database %s', db_name)
@@ -66,6 +66,7 @@ class OpenERPService(object):
             return db_name
         finally:
             cursor.close()
+            sql_db.close_db('postgres')
 
     def drop_database(self):
         """Drop database from `self.db_name`
