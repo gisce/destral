@@ -64,7 +64,8 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None):
     root_path = service.config['root_path']
 
     coverage = OOCoverage(
-        source=coverage_modules_path(modules_to_test, addons_path)
+        source=coverage_modules_path(modules_to_test, addons_path),
+        omit=['*/__terp__.py']
     )
     coverage.enabled = (enable_coverage or report_coverage)
 
