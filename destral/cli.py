@@ -63,17 +63,27 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None):
     addons_path = service.config['addons_path']
     root_path = service.config['root_path']
 
-    coverage = OOCoverage(
-        source=coverage_modules_path(modules_to_test, addons_path),
-        omit=['*/__terp__.py']
-    )
+    if not modules_to_test:
+        coverage_config = {
+            'source': [root_path],
+            'omit': ['*/addons/*/*']
+        }
+    else:
+        coverage_config = {
+            'source': coverage_modules_path(modules_to_test, addons_path),
+            'omit': ['*/__terp__.py']
+        }
+
+    coverage = OOCoverage(**coverage_config)
     coverage.enabled = (enable_coverage or report_coverage)
 
+    coverage.start()
     server_spec_suite = get_spec_suite(root_path)
     if server_spec_suite:
         logging.info('Spec testing for server')
         report = run_spec_suite(server_spec_suite)
         results.append(not len(report.failed_examples) > 0)
+    coverage.stop()
 
     for module in modules_to_test:
         with RestorePatchedRegisterAll():
