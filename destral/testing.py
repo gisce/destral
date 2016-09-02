@@ -28,6 +28,7 @@ class OOTestSuite(unittest.TestSuite):
             ooconfig['update'].update({'base': 1})
         self.openerp = OpenERPService(**ooconfig)
         self.drop_database = False
+        self.mantain_database = False
 
     def run(self, result, debug=False):
         """Run the test suite
@@ -42,8 +43,11 @@ class OOTestSuite(unittest.TestSuite):
                 self.openerp.db_name = self.openerp.create_database(
                     self.config['use_template']
                 )
-
-                self.drop_database = True
+                if self.mantain_database:
+                    logger.info('Force not dropdb %s', self.openerp.db_name)
+                    self.drop_database = False
+                else:
+                    self.drop_database = True
             result.db_name = self.openerp.db_name
             self.openerp.install_module(self.config['module'])
         else:

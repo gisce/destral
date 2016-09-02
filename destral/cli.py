@@ -102,7 +102,7 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
             coverage.start()
             suite = get_unittest_suite(module, tests)
             if no_dropdb:
-                suite.drop_database = False
+                suite.mantain_database = True
             result = run_unittest_suite(suite)
             coverage.stop()
             results.append(result.wasSuccessful())
