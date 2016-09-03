@@ -11,6 +11,8 @@ from destral.testing import run_spec_suite, get_spec_suite
 from destral.openerp import OpenERPService
 from destral.patch import RestorePatchedRegisterAll
 from destral.cover import OOCoverage
+from pylint import epylint as lint
+
 
 LOG_FORMAT = '%(asctime)s:{0}'.format(logging.BASIC_FORMAT)
 
@@ -24,7 +26,8 @@ logger = logging.getLogger('destral.cli')
 @click.option('--tests', '-t', multiple=True)
 @click.option('--enable-coverage', type=click.BOOL, default=False, is_flag=True)
 @click.option('--report-coverage', type=click.BOOL, default=False, is_flag=True)
-def destral(modules, tests, enable_coverage=None, report_coverage=None):
+@click.option('--enable-lint', type=click.BOOL, default=False, is_flag=True)
+def destral(modules, tests, enable_coverage=None, report_coverage=None, enable_lint=None):
     sys.argv = sys.argv[:1]
     service = OpenERPService()
     if not modules:
@@ -64,16 +67,21 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None):
     root_path = service.config['root_path']
 
     if not modules_to_test:
+        if enable_lint:
+            source_dir = root_path
         coverage_config = {
             'source': [root_path],
             'omit': ['*/addons/*/*']
         }
     else:
+        if enable_lint:
+            source_dir = coverage_modules_path(modules_to_test, addons_path)[0]
         coverage_config = {
             'source': coverage_modules_path(modules_to_test, addons_path),
             'omit': ['*/__terp__.py']
         }
-
+    if enable_lint:
+        (pylint_stdout, pylint_stderr) = lint.py_run('{} --enable=python3  --ignore __terp__.py'.format(source_dir), return_std=True)
     coverage = OOCoverage(**coverage_config)
     coverage.enabled = (enable_coverage or report_coverage)
 
@@ -106,6 +114,8 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None):
         coverage.report()
     if enable_coverage:
         coverage.save()
+    if enable_lint:
+        print(pylint_stdout.read())
 
     if not all(results):
         sys.exit(1)
