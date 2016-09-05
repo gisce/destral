@@ -24,9 +24,9 @@ logger = logging.getLogger('destral.cli')
 @click.option('--tests', '-t', multiple=True)
 @click.option('--enable-coverage', type=click.BOOL, default=False, is_flag=True)
 @click.option('--report-coverage', type=click.BOOL, default=False, is_flag=True)
-@click.option('--no-dropdb', type=click.BOOL, default=False, is_flag=True)
+@click.option('--dropdb/--no-dropdb', default=True)
 def destral(modules, tests, enable_coverage=None, report_coverage=None,
-            no_dropdb=None):
+            dropdb=None):
     sys.argv = sys.argv[:1]
     service = OpenERPService()
     if not modules:
@@ -101,8 +101,7 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
             os.environ['DESTRAL_MODULE'] = module
             coverage.start()
             suite = get_unittest_suite(module, tests)
-            if no_dropdb:
-                suite.drop_database = True
+            suite.drop_database = dropdb
             result = run_unittest_suite(suite)
             coverage.stop()
             results.append(result.wasSuccessful())
