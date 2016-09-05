@@ -61,6 +61,9 @@ def module_exists(module):
         try:
             openfile, pathname, desc = imp.find_module(mod, pathlist)
             pathlist = [pathname]
+            # Clean netsvc Services
+            import netsvc
+            netsvc.SERVICES.clear()
         except ImportError:
             return False
         else:
