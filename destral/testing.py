@@ -159,7 +159,7 @@ class OOBaseTests(OOTestCase):
 def get_unittest_suite(module, tests=None):
     """Get the unittest suit for a module
     """
-    tests_module = 'addons.{}.tests'.format(module)
+    tests_module = '{}.tests'.format(module)
     logger.debug('Test module: %s', tests_module)
     if module_exists(tests_module) is None:
         importlib.import_module(tests_module)
