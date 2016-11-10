@@ -19,7 +19,9 @@ logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 logger = logging.getLogger('destral.cli')
 
 
-@click.command()
+@click.command(context_settings=dict(
+    ignore_unknown_options=True,
+    allow_extra_args=True))
 @click.option('--modules', '-m', multiple=True)
 @click.option('--tests', '-t', multiple=True)
 @click.option('--enable-coverage', type=click.BOOL, default=False, is_flag=True)
