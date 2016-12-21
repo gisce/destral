@@ -91,7 +91,7 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
 
     for module in modules_to_test:
         with RestorePatchedRegisterAll():
-            install_requirements(module, addons_path)
+            #install_requirements(module, addons_path)
             spec_suite = get_spec_suite(os.path.join(addons_path, module))
             if spec_suite:
                 logger.info('Spec testing module %s', module)
