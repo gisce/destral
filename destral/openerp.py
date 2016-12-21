@@ -133,3 +133,16 @@ class OpenERPService(object):
         self.db, self.pool = pooler.restart_pool(
             self.config['db_name'], update_module=True
         )
+
+    def enable_admin(self, password='admin'):
+        from destral.transaction import Transaction
+        with Transaction().start(self.config['db_name']) as txn:
+            user_obj = self.pool.get('res.users')
+            user_ids = user_obj.search(txn.cursor, txn.user, [
+                ('login', '=', 'admin')
+            ])
+            user_obj.write(txn.cursor, txn.user, user_ids, {
+                'password': password
+            })
+            txn.cursor.commit()
+            logger.info('User admin enabled with password: %s', password)

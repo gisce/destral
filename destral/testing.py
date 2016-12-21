@@ -56,6 +56,8 @@ class OOTestSuite(unittest.TestSuite):
             if self.drop_database:
                 self.openerp.drop_database()
                 self.openerp.db_name = False
+            else:
+                self.openerp.enable_admin()
         return res
 
     def _handleClassSetUp(self, test, result):
