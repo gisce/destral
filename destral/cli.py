@@ -27,8 +27,9 @@ logger = logging.getLogger('destral.cli')
 @click.option('--enable-coverage', type=click.BOOL, default=False, is_flag=True)
 @click.option('--report-coverage', type=click.BOOL, default=False, is_flag=True)
 @click.option('--dropdb/--no-dropdb', default=True)
+@click.option('--requirements/--no-requirements', default=True)
 def destral(modules, tests, enable_coverage=None, report_coverage=None,
-            dropdb=None):
+            dropdb=None, requirements=None):
     sys.argv = sys.argv[:1]
     service = OpenERPService()
     if not modules:
@@ -91,7 +92,8 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
 
     for module in modules_to_test:
         with RestorePatchedRegisterAll():
-            install_requirements(module, addons_path)
+            if requirements:
+                install_requirements(module, addons_path)
             spec_suite = get_spec_suite(os.path.join(addons_path, module))
             if spec_suite:
                 logger.info('Spec testing module %s', module)
