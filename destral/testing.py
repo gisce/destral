@@ -57,6 +57,7 @@ class OOTestSuite(unittest.TestSuite):
                 self.openerp.drop_database()
                 self.openerp.db_name = False
             else:
+                logger.info('Not dropping database %s', self.openerp.db_name)
                 self.openerp.enable_admin()
         return res
 
