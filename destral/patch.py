@@ -84,5 +84,6 @@ class PatchNewCursors(object):
         sql_db.db_connect = PatchNewCursors.db_connect
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        import sql_db
         logger.info('Unpatching creation of new cursors')
         sql_db.db_connect = self.orig
