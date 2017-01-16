@@ -41,6 +41,14 @@ class PatchedCursor(object):
 
 
 class PatchedConnection(object):
+    """Patched connection wapper to return the same cursor.
+
+    This is useful when some method inside a testing mehtod creates new
+    cursors.
+
+    :param connection: Original connection
+    :param cursor: Original cursor
+    """
 
     def __init__(self, connection, cursor):
         self._connection = connection
@@ -50,10 +58,16 @@ class PatchedConnection(object):
         return getattr(self._connection, item)
 
     def cursor(self, serialized=False):
+        """Wrapped function to return the same cursor
+        """
         return self._cursor
 
 
 class PatchNewCursors(object):
+    """Util to patch creation of new cursor.
+
+    This will always return the cursor created by Transaction
+    """
 
     @staticmethod
     def db_connect(db_name):
@@ -62,9 +76,6 @@ class PatchNewCursors(object):
         cursor = Transaction().cursor
         conn = sql_db.Connection(sql_db._Pool, db_name)
         return PatchedConnection(conn, cursor)
-
-    def __init__(self, cursor):
-        self.cursor = cursor
 
     def __enter__(self):
         import sql_db
