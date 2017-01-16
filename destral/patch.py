@@ -1,5 +1,4 @@
 import logging
-import sql_db
 
 
 logger = logging.getLogger(__name__)
@@ -41,11 +40,14 @@ class PatchedCursor(object):
         return getattr(self.cursor, item)
 
 
-class PatchedConnection(sql_db.Connection):
+class PatchedConnection(object):
 
-    def __init__(self, pool, db_name, cursor):
+    def __init__(self, connection, cursor):
+        self._connection = connection
         self._cursor = PatchedCursor(cursor)
-        super(PatchedConnection, self).__init__(pool, db_name)
+
+    def __getattr__(self, item):
+        return getattr(self._connection, item)
 
     def cursor(self, serialized=False):
         return self._cursor
@@ -56,8 +58,10 @@ class PatchNewCursors(object):
     @staticmethod
     def db_connect(db_name):
         from destral.transaction import Transaction
+        import sql_db
         cursor = Transaction().cursor
-        return PatchedConnection(sql_db._Pool, db_name, cursor)
+        conn = sql_db.Connection(sql_db._Pool, db_name)
+        return PatchedConnection(conn, cursor)
 
     def __init__(self, cursor):
         self.cursor = cursor
