@@ -162,6 +162,13 @@ class OOBaseTests(OOTestCase):
         """
         Test translated strings in the module using the .po and .pot files
         """
+
+        from os.path import join, isdir
+        mod_path = join(self.openerp.config['addons_path'], self.config['module'])
+        trad_path = join(mod_path, 'i18n')
+        if not isdir(trad_path):
+            return
+
         logger.info('Checking translations for module %s',
                     self.config['module'])
         logger.info('Check loaded translatable strings on module %s to be'
