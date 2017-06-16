@@ -225,9 +225,33 @@ class OOBaseTests(OOTestCase):
             if ids:
                 logger.info(
                     'There are {} untranslated strings loaded referencing'
-                    ' module %s', len(ids), self.config['module'])
+                    ' module {}'.format(len(ids), self.config['module']))
             untranslated_ids = ids
 
+            # Generate new POT from loaded strings
+
+            tmp_pot = '/tmp/{}.pot'.format(self.config['module'])
+            ir_module = self.openerp.pool.get('ir.module.module')
+            wiz_model = self.openerp.pool.get("wizard.module.lang.export")
+            mod_ids = ir_module.search(cursor, uid, [
+                ('name', '=', self.config['module'])
+            ])
+            wiz_id = wiz_model.create(cursor, uid, {
+                'format': 'po',
+                'modules': [(6, 0, mod_ids)],
+            })
+            wiz_model.act_getfile(cursor, uid, [wiz_id])
+            wiz_data = wiz_model.read(
+                cursor, uid, wiz_id, ['data']
+            )[0]['data']
+            with open(tmp_pot, 'w') as pot:
+                from base64 import b64decode as dcode
+                pot.write(dcode(wiz_data))
+
+        pot_path = join(trad_path, '{}.pot'.format(self.config['module']))
+        po_path = join(trad_path, 'es_ES.po')
+        assert compare_pofiles(tmp_pot, pot_path)
+        assert compare_pofiles(tmp_pot, po_path, True)
         assert len(untranslated_ids) == 0
 
 
