@@ -250,9 +250,11 @@ class OOBaseTests(OOTestCase):
 
         pot_path = join(trad_path, '{}.pot'.format(self.config['module']))
         po_path = join(trad_path, 'es_ES.po')
-        assert compare_pofiles(tmp_pot, pot_path)
-        assert compare_pofiles(tmp_pot, po_path, True)
+        missing_strings = compare_pofiles(tmp_pot, pot_path)
+        untranslated_strings = compare_pofiles(tmp_pot, po_path, True)
         assert len(untranslated_ids) == 0
+        assert missing_strings
+        assert untranslated_strings
 
 
 def get_unittest_suite(module, tests=None):
