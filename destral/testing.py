@@ -215,6 +215,9 @@ class OOBaseTests(OOTestCase):
             cursor = txn.cursor
             uid = txn.user
             db_module = self.config['module'].replace('_', '.')
+
+            # Check for translations referencing this module
+
             ids = translations_obj.search(cursor, uid, [
                 ('name', '=', db_module),
                 ('value', '!=', False)
