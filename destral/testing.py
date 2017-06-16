@@ -209,7 +209,7 @@ class OOBaseTests(OOTestCase):
         logger.info('Checking translations for module %s',
                     self.config['module'])
         logger.info('Check loaded translatable strings on module %s to be'
-                    'translated', self.config['module'])
+                    ' translated', self.config['module'])
         translations_obj = self.openerp.pool.get('ir.translation')
         with Transaction().start(self.database) as txn:
             cursor = txn.cursor
