@@ -245,8 +245,8 @@ class OOBaseTests(OOTestCase):
                 cursor, uid, wiz_id, ['data']
             )[0]['data']
             with open(tmp_pot, 'w') as pot:
-                from base64 import b64decode as dcode
-                pot.write(dcode(wiz_data))
+                import base64
+                pot.write(base64.b64decode(wiz_data))
 
         pot_path = join(trad_path, '{}.pot'.format(self.config['module']))
         po_path = join(trad_path, 'es_ES.po')
