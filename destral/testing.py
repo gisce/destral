@@ -158,6 +158,31 @@ class OOBaseTests(OOTestCase):
                     ', '.join(no_access)
             ))
 
+    def test_translate_modules(self):
+        """
+        Test translated strings in the module using the .po and .pot files
+        """
+        logger.info('Checking translations for module %s',
+                    self.config['module'])
+        logger.info('Check loaded translatable strings on module %s to be'
+                    'translated', self.config['module'])
+        translations_obj = self.openerp.pool.get('ir.translation')
+        with Transaction().start(self.database) as txn:
+            cursor = txn.cursor
+            uid = txn.user
+            db_module = self.config['module'].replace('_', '.')
+            ids = translations_obj.search(cursor, uid, [
+                ('name', '=', db_module),
+                ('value', '!=', False)
+            ])
+            if ids:
+                logger.info(
+                    'There are {} untranslated strings loaded referencing'
+                    ' module %s', len(ids), self.config['module'])
+            untranslated_ids = ids
+
+        assert len(untranslated_ids) == 0
+
 
 def get_unittest_suite(module, tests=None):
     """Get the unittest suit for a module
