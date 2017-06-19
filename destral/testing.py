@@ -167,8 +167,12 @@ def get_unittest_suite(module, tests=None):
     if module_exists(tests_module) is None:
         importlib.import_module(tests_module)
     if tests:
-        tests = ['{}.{}'.format(tests_module, t) for t in tests]
-        suite = OOTestLoader().loadTestsFromNames(tests)
+        tests_suite = ['{}.{}'.format(tests_module, t) for t in tests]
+        try:
+            suite = OOTestLoader().loadTestsFromNames(tests_suite)
+        except AttributeError:
+            tests_suite = ['{}.{}'.format('destral.testing', t) for t in tests]
+            suite = OOTestLoader().loadTestsFromNames(tests_suite)
     else:
         try:
             suite = OOTestLoader().loadTestsFromName(tests_module)
