@@ -11,7 +11,8 @@ setup(
         'expects',
         'click',
         'mamba',
-        'coverage'
+        'coverage',
+        'babel'
     ],
     license='GNU GPLv3',
     author='GISCE-TI, S.L.',
