@@ -164,47 +164,13 @@ class OOBaseTests(OOTestCase):
         """
 
         from os.path import join, isdir
+        from tools import trans_export
+        from cStringIO import StringIO
+        from utils import compare_pofiles
         mod_path = join(self.openerp.config['addons_path'], self.config['module'])
         trad_path = join(mod_path, 'i18n')
         if not isdir(trad_path):
             return
-
-        def compare_pofiles(pathA, pathB, translate=False):
-            """
-            :param pathA: path to pot/po file
-            :param pathB: path to pot/po file
-            :param translate: whether translation should be checked or not
-            :return: True if all strings in pathA are in pathB
-            """
-            from babel.messages import pofile
-            from os.path import isfile
-            if not isfile(pathA):
-                logger.info('Could not get po/pot file: {}'.format(pathA))
-                return False
-            elif not isfile(pathB):
-                logger.info('Could not get po/pot file: {}'.format(pathB))
-                return False
-            with open(pathA, 'r') as pot:
-                fileA = pofile.read_po(pot)
-            with open(pathB, 'r') as pot:
-                fileB = pofile.read_po(pot)
-            not_found = 0
-            not_translated = 0
-            for str in fileA:
-                strB = fileB.get(str.id)
-                if not strB:
-                    not_found += 1
-                if translate and not strB.string:
-                    not_translated += 1
-            if not_found:
-                logger.info("There aren't {} strings from {} in {}".format(
-                    not_found, pathA, pathB
-                ))
-            if not_translated:
-                logger.info("There aren't {} strings translated in {}".format(
-                    not_translated, pathB
-                ))
-            return False if not_found or not_translated else True
 
         logger.info('Checking translations for module %s',
                     self.config['module'])
