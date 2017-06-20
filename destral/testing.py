@@ -194,11 +194,10 @@ class OOBaseTests(OOTestCase):
         # Write POT data into temp file
         with TemporaryFile(mode='r+w+t') as tmp_pot:
             tmp_pot.write(trans_data)
-
-        pot_path = join(trad_path, '{}.pot'.format(self.config['module']))
-        po_path = join(trad_path, 'es_ES.po')
-        missing_strings = compare_pofiles(tmp_pot, pot_path)
-        untranslated_strings = compare_pofiles(tmp_pot, po_path, True)
+            pot_path = join(trad_path, '{}.pot'.format(self.config['module']))
+            po_path = join(trad_path, 'es_ES.po')
+            missing_strings = compare_pofiles(tmp_pot, pot_path)
+            untranslated_strings = compare_pofiles(tmp_pot, po_path, True)
 
         self.assertFalse(
             untranslated_strings,
