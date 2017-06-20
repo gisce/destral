@@ -155,6 +155,8 @@ def compare_pofiles(pathA, pathB, translate=False):
     """
     from babel.messages import pofile
     from os.path import isfile
+    import logging
+    logger = logging.getLogger('Translations')
     if not isfile(pathA):
         logger.info('Could not get po/pot file: {}'.format(pathA))
         return False
