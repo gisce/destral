@@ -169,11 +169,14 @@ def compare_pofiles(pathA, pathB, translate=False):
         fileB = pofile.read_po(potB)
     not_found = 0
     not_translated = 0
-    for str in fileA:
-        strB = fileB.get(str.id)
-        if not strB:
+    for msgA in fileA:
+        if msgA.id == '':
+            continue
+        msgB = fileB.get(msgA.id)
+        if not msgB:
             not_found += 1
-        if translate and not strB.string:
+            continue
+        if translate and not msgB.string:
             not_translated += 1
     if not_found:
         logger.info("There aren't {} strings from {} in {}".format(
