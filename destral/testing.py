@@ -206,17 +206,17 @@ class OOBaseTests(OOTestCase):
             os.system('rm {}'.format(tmp_pot))
 
         self.assertFalse(
-            untranslated_strings,
-            'There are {} untranslated strings in the POfile'
+            missing_strings,
+            'There are {} missing strings in the POT file'
             ' of the module {}'.format(
-                len(untranslated_strings), self.config['module']
+                missing_strings, self.config['module']
             )
         )
         self.assertFalse(
-            missing_strings,
-            'There are {} missing strings in the POfile'
+            untranslated_strings,
+            'There are {} untranslated strings in the PO file'
             ' of the module {}'.format(
-                len(missing_strings), self.config['module']
+                untranslated_strings, self.config['module']
             )
         )
 
