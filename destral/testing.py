@@ -182,18 +182,6 @@ class OOBaseTests(OOTestCase):
             uid = txn.user
             db_module = self.config['module'].replace('_', '.')
 
-            # Check for translations referencing this module
-
-            ids = translations_obj.search(cursor, uid, [
-                ('name', '=', db_module),
-                ('value', '!=', False)
-            ])
-            if ids:
-                logger.info(
-                    'There are {} untranslated strings loaded referencing'
-                    ' module {}'.format(len(ids), self.config['module']))
-            untranslated_ids = ids
-
             # Generate new POT from loaded strings
 
             tmp_pot = '/tmp/{}.pot'.format(self.config['module'])
