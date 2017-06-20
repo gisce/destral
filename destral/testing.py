@@ -167,6 +167,7 @@ class OOBaseTests(OOTestCase):
         from tools import trans_export
         from cStringIO import StringIO
         from utils import compare_pofiles
+        from tempfile import TemporaryFile
         mod_path = join(self.openerp.config['addons_path'], self.config['module'])
         trad_path = join(mod_path, 'i18n')
         if not isdir(trad_path):
@@ -182,25 +183,15 @@ class OOBaseTests(OOTestCase):
             uid = txn.user
             db_module = self.config['module'].replace('_', '.')
 
-            # Generate new POT from loaded strings
+            # Generate POT data from loaded strings
+            trans_data = StringIO()
+            trans_export(
+                'es_ES', db_module, trans_data, 'po', dbname=cursor.dbname
+            )
 
-            tmp_pot = '/tmp/{}.pot'.format(self.config['module'])
-            ir_module = self.openerp.pool.get('ir.module.module')
-            wiz_model = self.openerp.pool.get("wizard.module.lang.export")
-            mod_ids = ir_module.search(cursor, uid, [
-                ('name', '=', self.config['module'])
-            ])
-            wiz_id = wiz_model.create(cursor, uid, {
-                'format': 'po',
-                'modules': [(6, 0, mod_ids)],
-            })
-            wiz_model.act_getfile(cursor, uid, [wiz_id])
-            wiz_data = wiz_model.read(
-                cursor, uid, wiz_id, ['data']
-            )[0]['data']
-            with open(tmp_pot, 'w') as pot:
-                import base64
-                pot.write(base64.b64decode(wiz_data))
+        # Write POT data into temp file
+        with TemporaryFile(mode='r+w+t') as tmp_pot:
+            tmp_pot.write(trans_data)
 
         pot_path = join(trad_path, '{}.pot'.format(self.config['module']))
         po_path = join(trad_path, 'es_ES.po')
