@@ -163,10 +163,10 @@ def compare_pofiles(pathA, pathB, translate=False):
     elif not isfile(pathB):
         logger.info('Could not get po/pot file: {}'.format(pathB))
         return False
-    with open(pathA, 'r') as pot:
-        fileA = pofile.read_po(pot)
-    with open(pathB, 'r') as pot:
-        fileB = pofile.read_po(pot)
+    with open(pathA, 'r') as potA:
+        fileA = pofile.read_po(potA)
+    with open(pathB, 'r') as potB:
+        fileB = pofile.read_po(potB)
     not_found = 0
     not_translated = 0
     for str in fileA:
