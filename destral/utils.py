@@ -179,11 +179,11 @@ def compare_pofiles(pathA, pathB, translate=False):
         if translate and not msgB.string:
             not_translated += 1
     if not_found:
-        logger.info("There aren't {} strings from {} in {}".format(
+        logger.info("There are {} strings from {} missing in {}".format(
             not_found, pathA, pathB
         ))
     if not_translated:
-        logger.info("There aren't {} strings translated in {}".format(
+        logger.info("There are {} strings missing translation in {}".format(
             not_translated, pathB
         ))
     return False if not_found or not_translated else True
