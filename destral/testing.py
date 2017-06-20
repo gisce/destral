@@ -252,9 +252,21 @@ class OOBaseTests(OOTestCase):
         po_path = join(trad_path, 'es_ES.po')
         missing_strings = compare_pofiles(tmp_pot, pot_path)
         untranslated_strings = compare_pofiles(tmp_pot, po_path, True)
-        assert len(untranslated_ids) == 0
-        assert missing_strings
-        assert untranslated_strings
+
+        self.assertFalse(
+            untranslated_strings,
+            'There are {} untranslated strings in the POfile'
+            ' of the module {}'.format(
+                len(untranslated_strings), self.config['module']
+            )
+        )
+        self.assertFalse(
+            missing_strings,
+            'There are {} missing strings in the POfile'
+            ' of the module {}'.format(
+                len(missing_strings), self.config['module']
+            )
+        )
 
 
 def get_unittest_suite(module, tests=None):
