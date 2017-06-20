@@ -18,7 +18,7 @@ class OOTestSuite(unittest.TestSuite):
     def __init__(self, tests=()):
         super(OOTestSuite, self).__init__(tests)
         self.config = config_from_environment(
-            'DESTRAL', ['module'], use_template=True
+            'DESTRAL', ['module', 'testing_langs'], use_template=True
         )
         ooconfig = {}
         self.config['use_template'] = False
