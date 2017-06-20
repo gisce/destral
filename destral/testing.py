@@ -193,29 +193,30 @@ class OOBaseTests(OOTestCase):
             # Write POT data into temp file
             with open(tmp_pot, 'w') as pot:
                 pot.write(trans_data.getvalue())
-
             pot_path = join(trad_path, '{}.pot'.format(self.config['module']))
-            po_path = join(trad_path, 'es_ES.po')
             missing_strings = compare_pofiles(tmp_pot, pot_path)
-            untranslated_strings = compare_pofiles(tmp_pot, po_path, True)
+
+            self.assertFalse(
+                missing_strings,
+                'There are {} missing strings in the POT file'
+                ' of the module {}'.format(
+                    missing_strings, self.config['module']
+                )
+            )
+            for test_lang in self.config['testing_langs'].split(','):
+                po_path = join(trad_path, '{}.po'.format(test_lang))
+                untranslated_strings = compare_pofiles(tmp_pot, po_path, True)
+                self.assertFalse(
+                    untranslated_strings,
+                    'There are {} untranslated strings in the PO file'
+                    ' of the module {}'.format(
+                        untranslated_strings, self.config['module']
+                    )
+                )
+
         finally:
             # Ensure file removal after pofile compare
             os.system('rm {}'.format(tmp_pot))
-
-        self.assertFalse(
-            missing_strings,
-            'There are {} missing strings in the POT file'
-            ' of the module {}'.format(
-                missing_strings, self.config['module']
-            )
-        )
-        self.assertFalse(
-            untranslated_strings,
-            'There are {} untranslated strings in the PO file'
-            ' of the module {}'.format(
-                untranslated_strings, self.config['module']
-            )
-        )
 
 
 def get_unittest_suite(module, tests=None):
