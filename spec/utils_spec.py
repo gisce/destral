@@ -27,9 +27,9 @@ with description('Translations'):
     with context('Comparing pofiles'):
         with it('must check all msg in first po file to be in the second one'):
             pathA = get_fixture('potfileA.pot')
-            pathB = get_fixture('potfileB.pot')  # Has the same msg ids than A
-            pathC = get_fixture('potfileC.pot')  # Has 2 less messages than A
-            pathD = get_fixture('potfileD.pot')  # Does not exist
+            pathB = get_fixture('pofileA.po')    # Has all messages translated
+            pathC = get_fixture('potfileB.pot')  # Has 2 less messages than A
+            pathD = get_fixture('potfileC.pot')  # Does not exist
             missing_msg = compare_pofiles(pathA, pathB)
             expect(missing_msg).to(equal(0))
             missing_msg = compare_pofiles(pathA, pathC)
@@ -40,9 +40,9 @@ with description('Translations'):
         with it('must check all msg in first po file to be translated in '
                 'the second one'):
             pathA = get_fixture('potfileA.pot')
-            pathB = get_fixture('pofileA.po') # Has all messages translated
-            pathC = get_fixture('pofileB.po') # Has 1 message untranslated
-            pathD = get_fixture('pofileC.po') # Does not exist
+            pathB = get_fixture('pofileA.po')  # Has all messages translated
+            pathC = get_fixture('pofileB.po')  # Has 1 message untranslated
+            pathD = get_fixture('pofileC.po')  # Does not exist
             untranslated_msg = compare_pofiles(pathA, pathB, True)
             expect(untranslated_msg).to(equal(0))
             untranslated_msg = compare_pofiles(pathA, pathC, True)
