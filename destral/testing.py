@@ -167,7 +167,6 @@ class OOBaseTests(OOTestCase):
         from tools import trans_export
         from cStringIO import StringIO
         from utils import compare_pofiles
-        from tempfile import TemporaryFile
         mod_path = join(self.openerp.config['addons_path'], self.config['module'])
         trad_path = join(mod_path, 'i18n')
         if not isdir(trad_path):
@@ -191,13 +190,19 @@ class OOBaseTests(OOTestCase):
                 'es_ES', db_module, trans_data, 'po', dbname=cursor.dbname
             )
 
-        # Write POT data into temp file
-        with TemporaryFile(mode='r+w+t') as tmp_pot:
-            tmp_pot.write(trans_data)
+        tmp_pot = '/tmp/{}.pot'.format(self.config['module'])
+        try:
+            # Write POT data into temp file
+            with open(tmp_pot, 'w') as pot:
+                pot.write(trans_data.getvalue())
+
             pot_path = join(trad_path, '{}.pot'.format(self.config['module']))
             po_path = join(trad_path, 'es_ES.po')
             missing_strings = compare_pofiles(tmp_pot, pot_path)
             untranslated_strings = compare_pofiles(tmp_pot, po_path, True)
+        finally:
+            # Ensure file removal after pofile compare
+            os.system('rm {}'.format(tmp_pot))
 
         self.assertFalse(
             untranslated_strings,
