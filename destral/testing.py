@@ -171,13 +171,15 @@ class OOBaseTests(OOTestCase):
         mod_path = join(self.openerp.config['addons_path'], self.config['module'])
         trad_path = join(mod_path, 'i18n')
         if not isdir(trad_path):
+            logger.warning(
+                'Module %s has no translations', self.config['module']
+            )
             return
 
-        logger.info('Checking translations for module %s',
-                    self.config['module'])
-        logger.info('Check loaded translatable strings on module %s to be'
-                    ' translated', self.config['module'])
-        translations_obj = self.openerp.pool.get('ir.translation')
+        logger.info(
+            'Checking translations for module %s', self.config['module']
+        )
+
         with Transaction().start(self.database) as txn:
             cursor = txn.cursor
             uid = txn.user
