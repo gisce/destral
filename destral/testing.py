@@ -178,11 +178,8 @@ class OOBaseTests(OOTestCase):
         logger.info(
             'Checking translations for module %s', self.config['module']
         )
-
         with Transaction().start(self.database) as txn:
             cursor = txn.cursor
-            uid = txn.user
-            db_module = self.config['module'].replace('_', '.')
 
             # Generate POT data from loaded strings
             trans_data = StringIO()
