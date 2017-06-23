@@ -25,33 +25,28 @@ with description('With a diff'):
 
 with description('Translations'):
     with context('Comparing pofiles'):
-        with it('must check all msg in first po file to be in the second one'):
+        with it('Compare the POT and PO files with the same msg id and string'):
             pathA = get_fixture('potfileA.pot')
-            pathB = get_fixture('pofileA.po')    # Has all messages translated
-            pathC = get_fixture('potfileB.pot')  # Has 2 less messages than A
-            pathD = get_fixture('potfileC.pot')  # Does not exist
+            pathB = get_fixture('pofileA.po')
             missing_msg, untranslated_msg = compare_pofiles(pathA, pathB)
             expect(untranslated_msg).to(equal(0))
             expect(missing_msg).to(equal(0))
+        with it('Compare POT files with one POT missing 2 strings'):
+            pathA = get_fixture('potfileA.pot')
+            pathC = get_fixture('potfileB.pot')  # Has 2 less messages than A
             missing_msg, untranslated_msg = compare_pofiles(pathA, pathC)
             expect(untranslated_msg).to(equal(0))
             expect(missing_msg).to(equal(2))
+        with it('Compare POT files with one missing POT file'):
+            pathA = get_fixture('potfileA.pot')
+            pathD = get_fixture('potfileC.pot')  # Does not exist
             missing_msg, untranslated_msg = compare_pofiles(pathA, pathD)
             expect(untranslated_msg).to(equal(-1))
             expect(missing_msg).to(equal(-1))
 
-        with it('must check all msg in first po file to be translated in '
-                'the second one'):
+        with it('Compare POT and PO files missing 1 translation'):
             pathA = get_fixture('potfileA.pot')
-            pathB = get_fixture('pofileA.po')  # Has all messages translated
             pathC = get_fixture('pofileB.po')  # Has 1 message untranslated
-            pathD = get_fixture('pofileC.po')  # Does not exist
-            missing_msg, untranslated_msg = compare_pofiles(pathA, pathB)
-            expect(missing_msg).to(equal(0))
-            expect(untranslated_msg).to(equal(0))
             missing_msg, untranslated_msg = compare_pofiles(pathA, pathC)
             expect(missing_msg).to(equal(0))
             expect(untranslated_msg).to(equal(1))
-            missing_msg, untranslated_msg = compare_pofiles(pathA, pathD)
-            expect(missing_msg).to(equal(-1))
-            expect(untranslated_msg).to(equal(-1))
