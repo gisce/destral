@@ -30,11 +30,14 @@ with description('Translations'):
             pathB = get_fixture('pofileA.po')    # Has all messages translated
             pathC = get_fixture('potfileB.pot')  # Has 2 less messages than A
             pathD = get_fixture('potfileC.pot')  # Does not exist
-            missing_msg = compare_pofiles(pathA, pathB)
+            missing_msg, untranslated_msg = compare_pofiles(pathA, pathB)
+            expect(untranslated_msg).to(equal(0))
             expect(missing_msg).to(equal(0))
-            missing_msg = compare_pofiles(pathA, pathC)
+            missing_msg, untranslated_msg = compare_pofiles(pathA, pathC)
+            expect(untranslated_msg).to(equal(0))
             expect(missing_msg).to(equal(2))
-            missing_msg = compare_pofiles(pathA, pathD)
+            missing_msg, untranslated_msg = compare_pofiles(pathA, pathD)
+            expect(untranslated_msg).to(equal(-1))
             expect(missing_msg).to(equal(-1))
 
         with it('must check all msg in first po file to be translated in '
@@ -43,9 +46,12 @@ with description('Translations'):
             pathB = get_fixture('pofileA.po')  # Has all messages translated
             pathC = get_fixture('pofileB.po')  # Has 1 message untranslated
             pathD = get_fixture('pofileC.po')  # Does not exist
-            untranslated_msg = compare_pofiles(pathA, pathB, True)
+            missing_msg, untranslated_msg = compare_pofiles(pathA, pathB)
+            expect(missing_msg).to(equal(0))
             expect(untranslated_msg).to(equal(0))
-            untranslated_msg = compare_pofiles(pathA, pathC, True)
+            missing_msg, untranslated_msg = compare_pofiles(pathA, pathC)
+            expect(missing_msg).to(equal(0))
             expect(untranslated_msg).to(equal(1))
-            untranslated_msg = compare_pofiles(pathA, pathD, True)
+            missing_msg, untranslated_msg = compare_pofiles(pathA, pathD)
+            expect(missing_msg).to(equal(-1))
             expect(untranslated_msg).to(equal(-1))
