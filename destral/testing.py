@@ -166,7 +166,7 @@ class OOBaseTests(OOTestCase):
         from os.path import join, isdir
         from tools import trans_export
         from cStringIO import StringIO
-        from utils import compare_pofiles
+        from utils import compare_pofiles, TempDir
         mod_path = join(
             self.openerp.config['addons_path'], self.config['module']
         )
@@ -190,8 +190,8 @@ class OOBaseTests(OOTestCase):
                 trans_data, 'po', dbname=cursor.dbname
             )
 
-        tmp_pot = '/tmp/{}.pot'.format(self.config['module'])
-        try:
+        with TempDir() as temp:
+            tmp_pot = '{}/{}.pot'.format(temp.dir, self.config['module'])
             # Write POT data into temp file
             with open(tmp_pot, 'w') as pot:
                 pot.write(trans_data.getvalue())
@@ -215,10 +215,6 @@ class OOBaseTests(OOTestCase):
                         untranslated_strings, self.config['module']
                     )
                 )
-
-        finally:
-            # Ensure file removal after pofile compare
-            os.system('rm {}'.format(tmp_pot))
 
 
 def get_unittest_suite(module, tests=None):
