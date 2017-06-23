@@ -207,7 +207,14 @@ class OOBaseTests(OOTestCase):
             )
             for test_lang in self.config['testing_langs']:
                 po_path = join(trad_path, '{}.po'.format(test_lang))
-                untranslated_strings = compare_pofiles(tmp_pot, po_path, True)
+                missing_strings, untranslated_strings = compare_pofiles(tmp_pot, po_path)
+                self.assertFalse(
+                    untranslated_strings,
+                    'There are {} missing strings in the PO file'
+                    ' of the module {}'.format(
+                        untranslated_strings, self.config['module']
+                    )
+                )
                 self.assertFalse(
                     untranslated_strings,
                     'There are {} untranslated strings in the PO file'
