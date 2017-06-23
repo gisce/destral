@@ -196,8 +196,11 @@ class OOBaseTests(OOTestCase):
             with open(tmp_pot, 'w') as pot:
                 pot.write(trans_data.getvalue())
             pot_path = join(trad_path, '{}.pot'.format(self.config['module']))
-            missing_strings = compare_pofiles(tmp_pot, pot_path)
-
+            missing_strings, untranslated_strings = compare_pofiles(
+                tmp_pot, pot_path
+            )
+            # Don't compare untranslated strings in POT
+            #   because POT files do not contain translations
             self.assertFalse(
                 missing_strings,
                 'There are {} missing strings in the POT file'
@@ -207,7 +210,9 @@ class OOBaseTests(OOTestCase):
             )
             for test_lang in self.config['testing_langs']:
                 po_path = join(trad_path, '{}.po'.format(test_lang))
-                missing_strings, untranslated_strings = compare_pofiles(tmp_pot, po_path)
+                missing_strings, untranslated_strings = compare_pofiles(
+                    tmp_pot, po_path
+                )
                 self.assertFalse(
                     untranslated_strings,
                     'There are {} missing strings in the PO file'
