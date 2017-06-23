@@ -146,7 +146,7 @@ def coverage_modules_path(modules_to_test, addons_path):
     ]
 
 
-def compare_pofiles(pathA, pathB, translate=False):
+def compare_pofiles(pathA, pathB):
     """
     :param pathA: path to pot/po file
     :param pathB: path to pot/po file
@@ -156,7 +156,7 @@ def compare_pofiles(pathA, pathB, translate=False):
     from babel.messages import pofile
     from os.path import isfile
     import logging
-    logger = logging.getLogger('Translations')
+    logger = logging.getLogger('destral.utils.compare_pofiles')
     if not isfile(pathA):
         logger.info('Could not get po/pot file: {}'.format(pathA))
         return -1
@@ -186,4 +186,4 @@ def compare_pofiles(pathA, pathB, translate=False):
         logger.info("There are {} strings missing translation in {}".format(
             not_translated, pathB
         ))
-    return not_found if not translate else not_translated+not_found
+    return not_found, not_translated
