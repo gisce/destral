@@ -5,6 +5,8 @@ import os
 import re
 import sys
 import subprocess
+import tempfile
+import shutil
 
 __all__ = [
     'update_config',
@@ -187,3 +189,14 @@ def compare_pofiles(pathA, pathB):
             not_translated, pathB
         ))
     return not_found, not_translated
+
+
+class TempDir(object):
+    def __init__(self):
+        self.dir = tempfile.mkdtemp()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        shutil.rmtree(self.dir)
