@@ -161,10 +161,10 @@ def compare_pofiles(pathA, pathB):
     logger = logging.getLogger('destral.utils.compare_pofiles')
     if not isfile(pathA):
         logger.info('Could not get po/pot file: {}'.format(pathA))
-        return -1
+        return -1, -1
     elif not isfile(pathB):
         logger.info('Could not get po/pot file: {}'.format(pathB))
-        return -1
+        return -1, -1
     with open(pathA, 'r') as potA:
         fileA = pofile.read_po(potA)
     with open(pathB, 'r') as potB:
@@ -178,7 +178,7 @@ def compare_pofiles(pathA, pathB):
         if not msgB:
             not_found += 1
             continue
-        if translate and not msgB.string:
+        if not msgB.string:
             not_translated += 1
     if not_found:
         logger.info("There are {} strings from {} missing in {}".format(
