@@ -165,10 +165,42 @@ def compare_pofiles(pathA, pathB):
     elif not isfile(pathB):
         logger.info('Could not get po/pot file: {}'.format(pathB))
         return -1, -1
-    with open(pathA, 'r') as potA:
-        fileA = pofile.read_po(potA)
-    with open(pathB, 'r') as potB:
-        fileB = pofile.read_po(potB)
+    try:
+        with open(pathA, 'r') as potA:
+            fileA = pofile.read_po(potA)
+    except ValueError:
+        # If bad formatted data, replace it
+        with open(pathA, 'r') as potA:
+            data = potA.read()
+        from re import sub
+        data = sub(r"(POT-Creation-Date: )(.*):..\+(.*)\\", r"\1\2\\", data)
+        data = sub(r"(PO-Revision-Date: )(.*):..\+(.*)\\", r"\1\2\\", data)
+        with open(pathA, 'w') as potA:
+            potA.write(data)
+        with open(pathA, 'r') as potA:
+            fileA = pofile.read_po(potA)
+        logger.warning(
+            'Data of POfile {} has bad formatted '
+            'creation or revision dates'.format(pathA)
+        )
+    try:
+        with open(pathB, 'r') as potB:
+            fileB = pofile.read_po(potB)
+    except ValueError:
+        # If bad formatted data, replace it
+        with open(pathB, 'r') as potB:
+            data = potB.read()
+        from re import sub
+        data = sub(r"(POT-Creation-Date: )(.*):..\+(.*)\\", r"\1\2\\", data)
+        data = sub(r"(PO-Revision-Date: )(.*):..\+(.*)\\", r"\1\2\\", data)
+        with open(pathB, 'w') as potB:
+            potB.write(data)
+        with open(pathB, 'r') as potB:
+            fileB = pofile.read_po(potB)
+        logger.warning(
+            'Data of POfile {} has bad formatted '
+            'creation or revision dates'.format(pathB)
+        )
     not_found = 0
     not_translated = 0
     for msgA in fileA:
