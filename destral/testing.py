@@ -18,7 +18,8 @@ class OOTestSuite(unittest.TestSuite):
     def __init__(self, tests=()):
         super(OOTestSuite, self).__init__(tests)
         self.config = config_from_environment(
-            'DESTRAL', ['module', 'testing_langs'], use_template=True
+            'DESTRAL', ['module', 'testing_langs'],
+            use_template=True, testing_langs=[]
         )
         ooconfig = {}
         self.config['use_template'] = False
@@ -177,6 +178,12 @@ class OOBaseTests(OOTestCase):
             )
             return
 
+        if not self.config['testing_langs']:
+            logger.info(
+                'Configuration variable "DESTRAL_TESTING_LANGS" has'
+                ' not been initialized'
+            )
+            return
         logger.info(
             'Checking translations for module %s', self.config['module']
         )
