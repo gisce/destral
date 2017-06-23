@@ -167,7 +167,9 @@ class OOBaseTests(OOTestCase):
         from tools import trans_export
         from cStringIO import StringIO
         from utils import compare_pofiles
-        mod_path = join(self.openerp.config['addons_path'], self.config['module'])
+        mod_path = join(
+            self.openerp.config['addons_path'], self.config['module']
+        )
         trad_path = join(mod_path, 'i18n')
         if not isdir(trad_path):
             logger.warning(
@@ -203,7 +205,7 @@ class OOBaseTests(OOTestCase):
                     missing_strings, self.config['module']
                 )
             )
-            for test_lang in self.config['testing_langs'].split(','):
+            for test_lang in self.config['testing_langs']:
                 po_path = join(trad_path, '{}.po'.format(test_lang))
                 untranslated_strings = compare_pofiles(tmp_pot, po_path, True)
                 self.assertFalse(
