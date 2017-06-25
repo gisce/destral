@@ -18,7 +18,8 @@ class OOTestSuite(unittest.TestSuite):
     def __init__(self, tests=()):
         super(OOTestSuite, self).__init__(tests)
         self.config = config_from_environment(
-            'DESTRAL', ['module'], use_template=True
+            'DESTRAL', ['module', 'testing_langs'],
+            use_template=True, testing_langs=[]
         )
         ooconfig = {}
         self.config['use_template'] = False
@@ -157,6 +158,82 @@ class OOBaseTests(OOTestCase):
                 "Models: {0} doesn't have any access rules defined".format(
                     ', '.join(no_access)
             ))
+
+    def test_translate_modules(self):
+        """
+        Test translated strings in the module using the .po and .pot files
+        """
+
+        from os.path import join, isdir
+        from tools import trans_export
+        from cStringIO import StringIO
+        from utils import compare_pofiles, TempDir
+        mod_path = join(
+            self.openerp.config['addons_path'], self.config['module']
+        )
+        trad_path = join(mod_path, 'i18n')
+        if not isdir(trad_path):
+            logger.warning(
+                'Module %s has no translations', self.config['module']
+            )
+            return
+
+        if not self.config['testing_langs']:
+            logger.warning(
+                'Configuration variable "DESTRAL_TESTING_LANGS" has'
+                ' not been initialized'
+            )
+            return
+        logger.info(
+            'Checking translations for module %s', self.config['module']
+        )
+        with Transaction().start(self.database) as txn:
+            cursor = txn.cursor
+
+            # Generate POT data from loaded strings
+            trans_data = StringIO()
+            trans_export(
+                self.config['testing_langs'][0], self.config['module'],
+                trans_data, 'po', dbname=cursor.dbname
+            )
+
+        with TempDir() as temp:
+            tmp_pot = '{}/{}.pot'.format(temp.dir, self.config['module'])
+            # Write POT data into temp file
+            with open(tmp_pot, 'w') as pot:
+                pot.write(trans_data.getvalue())
+            pot_path = join(trad_path, '{}.pot'.format(self.config['module']))
+            missing_strings, untranslated_strings = compare_pofiles(
+                tmp_pot, pot_path
+            )
+            # Don't compare untranslated strings in POT
+            #   because POT files do not contain translations
+            self.assertFalse(
+                missing_strings,
+                'There are {} missing strings in the POT file'
+                ' of the module {}'.format(
+                    missing_strings, self.config['module']
+                )
+            )
+            for test_lang in self.config['testing_langs']:
+                po_path = join(trad_path, '{}.po'.format(test_lang))
+                missing_strings, untranslated_strings = compare_pofiles(
+                    tmp_pot, po_path
+                )
+                self.assertFalse(
+                    untranslated_strings,
+                    'There are {} missing strings in the PO file'
+                    ' of the module {}'.format(
+                        untranslated_strings, self.config['module']
+                    )
+                )
+                self.assertFalse(
+                    untranslated_strings,
+                    'There are {} untranslated strings in the PO file'
+                    ' of the module {}'.format(
+                        untranslated_strings, self.config['module']
+                    )
+                )
 
 
 def get_unittest_suite(module, tests=None):

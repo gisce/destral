@@ -1,0 +1,26 @@
+# This is some random translation file
+
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0.0\n"
+"Report-Msgid-Bugs-To: fake@destral.org\n"
+"POT-Creation-Date: 2017-06-20 10:00\n"
+"PO-Revision-Date: 2017-06-20 10:00\n"
+"Last-Translator: <>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+msgid "One String"
+msgstr "Translated String"
+
+msgid "A Larger string!!!!"
+msgstr "A Larger translated string :)"
+
+msgid ""
+"Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
+"Suspendisse posuere iaculis mauris. Aliquam ornare ante lectus,"
+"nec feugiat nunc dignissim in."
+msgstr ""

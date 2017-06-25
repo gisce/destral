@@ -5,6 +5,8 @@ import os
 import re
 import sys
 import subprocess
+import tempfile
+import shutil
 
 __all__ = [
     'update_config',
@@ -144,3 +146,89 @@ def coverage_modules_path(modules_to_test, addons_path):
         os.path.relpath(os.path.realpath(os.path.join(addons_path, m))) for m in
         modules_to_test
     ]
+
+
+def compare_pofiles(pathA, pathB):
+    """
+    :param pathA: path to pot/po file
+    :param pathB: path to pot/po file
+    :param translate: whether translation should be checked or not
+    :return: True if all strings in pathA are in pathB
+    """
+    from babel.messages import pofile
+    from os.path import isfile
+    import logging
+    logger = logging.getLogger('destral.utils.compare_pofiles')
+    if not isfile(pathA):
+        logger.info('Could not get po/pot file: {}'.format(pathA))
+        return -1, -1
+    elif not isfile(pathB):
+        logger.info('Could not get po/pot file: {}'.format(pathB))
+        return -1, -1
+    try:
+        with open(pathA, 'r') as potA:
+            fileA = pofile.read_po(potA)
+    except ValueError:
+        # If bad formatted data, replace it
+        with open(pathA, 'r') as potA:
+            data = potA.read()
+        from re import sub
+        data = sub(r"(POT-Creation-Date: )(.*):..\+(.*)\\", r"\1\2\\", data)
+        data = sub(r"(PO-Revision-Date: )(.*):..\+(.*)\\", r"\1\2\\", data)
+        with open(pathA, 'w') as potA:
+            potA.write(data)
+        with open(pathA, 'r') as potA:
+            fileA = pofile.read_po(potA)
+        logger.warning(
+            'Data of POfile {} has bad formatted '
+            'creation or revision dates'.format(pathA)
+        )
+    try:
+        with open(pathB, 'r') as potB:
+            fileB = pofile.read_po(potB)
+    except ValueError:
+        # If bad formatted data, replace it
+        with open(pathB, 'r') as potB:
+            data = potB.read()
+        from re import sub
+        data = sub(r"(POT-Creation-Date: )(.*):..\+(.*)\\", r"\1\2\\", data)
+        data = sub(r"(PO-Revision-Date: )(.*):..\+(.*)\\", r"\1\2\\", data)
+        with open(pathB, 'w') as potB:
+            potB.write(data)
+        with open(pathB, 'r') as potB:
+            fileB = pofile.read_po(potB)
+        logger.warning(
+            'Data of POfile {} has bad formatted '
+            'creation or revision dates'.format(pathB)
+        )
+    not_found = 0
+    not_translated = 0
+    for msgA in fileA:
+        if msgA.id == '':
+            continue
+        msgB = fileB.get(msgA.id)
+        if not msgB:
+            not_found += 1
+            continue
+        if not msgB.string:
+            not_translated += 1
+    if not_found:
+        logger.info("There are {} strings from {} missing in {}".format(
+            not_found, pathA, pathB
+        ))
+    if not_translated:
+        logger.info("There are {} strings missing translation in {}".format(
+            not_translated, pathB
+        ))
+    return not_found, not_translated
+
+
+class TempDir(object):
+    def __init__(self):
+        self.dir = tempfile.mkdtemp()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        shutil.rmtree(self.dir)
