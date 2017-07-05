@@ -201,17 +201,17 @@ def compare_pofiles(pathA, pathB):
             'Data of POfile {} has bad formatted '
             'creation or revision dates'.format(pathB)
         )
-    not_found = 0
-    not_translated = 0
+    not_found = []
+    not_translated = []
     for msgA in fileA:
         if msgA.id == '':
             continue
         msgB = fileB.get(msgA.id)
         if not msgB:
-            not_found += 1
+            not_found.append(msgA.id)
             continue
         if not msgB.string:
-            not_translated += 1
+            not_translated.append(msgA.id)
     return not_found, not_translated
 
 
