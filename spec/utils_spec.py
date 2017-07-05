@@ -37,7 +37,7 @@ with description('Translations'):
             pathA = get_fixture('potfileA.pot')
             pathC = get_fixture('potfileB.pot')  # Has 2 less messages than A
             missing_msg, untranslated_msg = compare_pofiles(pathA, pathC)
-            expect(untranslated_msg).to(equal([
+            expect(missing_msg).to(equal([
                 "One String", "A Larger string!!!!"
             ]))
             expect(untranslated_msg).to(equal([(
