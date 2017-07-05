@@ -231,18 +231,30 @@ class OOBaseTests(OOTestCase):
                 missing_strings, untranslated_strings = compare_pofiles(
                     tmp_pot, po_path
                 )
-                self.assertFalse(
+                self.assertIsNotNone(
                     missing_strings,
-                    'There are {} missing strings in the PO file'
-                    ' of the module {}'.format(
-                        untranslated_strings, self.config['module']
+                    'There is not a PO file for module {}'
+                    ' with locale: "{}"'.format(
+                        self.config['module'], test_lang
                     )
                 )
-                self.assertFalse(
+                self.assertItemsEqual(
+                    [],
+                    missing_strings,
+                    'There are {} missing strings in the PO file'
+                    ' of the module {}\nThe missing strings are:\n{}'.format(
+                        len(missing_strings), self.config['module'],
+                        '\n'.join(missing_strings)
+                    )
+                )
+                self.assertItemsEqual(
+                    [],
                     untranslated_strings,
                     'There are {} untranslated strings in the PO file'
-                    ' of the module {}'.format(
-                        untranslated_strings, self.config['module']
+                    ' of the module {}\nThe untranslated strings are:\n'
+                    '>>>\n{}\n<<<'.format(
+                        len(untranslated_strings), self.config['module'],
+                        '\n'.join(untranslated_strings)
                     )
                 )
 
