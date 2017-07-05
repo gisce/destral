@@ -48,9 +48,7 @@ with description('Translations'):
             pathA = get_fixture('potfileA.pot')
             pathC = get_fixture('pofileB.po')  # Has 1 message untranslated
             missing_msg, untranslated_msg = compare_pofiles(pathA, pathC)
-            expect(len(missing_msg)).to(equal(0))
             expect(missing_msg).to(equal([]))
-            expect(len(untranslated_msg)).to(equal(1))
             expect(untranslated_msg).to(equal([(
                 "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
                 "Suspendisse posuere iaculis mauris. Aliquam ornare ante lectus,"
