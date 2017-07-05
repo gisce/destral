@@ -208,11 +208,19 @@ class OOBaseTests(OOTestCase):
             )
             # Don't compare untranslated strings in POT
             #   because POT files do not contain translations
-            self.assertFalse(
+            self.assertIsNotNone(
+                missing_strings,
+                'There is not a POT file for module {}'.format(
+                    self.config['module']
+                )
+            )
+            self.assertItemsEqual(
+                [],
                 missing_strings,
                 'There are {} missing strings in the POT file'
-                ' of the module {}'.format(
-                    missing_strings, self.config['module']
+                ' of the module {}\nThe missing strings are:\n{}'.format(
+                    len(missing_strings), self.config['module'],
+                    '\n'.join(missing_strings)
                 )
             )
             logger.info('Checking translations for langs: {}'.format(
