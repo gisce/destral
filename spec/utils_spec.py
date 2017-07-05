@@ -64,3 +64,7 @@ with description('Translations'):
             missing_msg, untranslated_msg = compare_pofiles(pathA, pathD)
             expect(untranslated_msg).to(equal(False))
             expect(missing_msg).to(equal(False))
+            # invert POT positions
+            missing_msg, untranslated_msg = compare_pofiles(pathD, pathA)
+            expect(untranslated_msg).to(equal(False))
+            expect(missing_msg).to(equal(False))
