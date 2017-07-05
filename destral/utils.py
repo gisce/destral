@@ -161,10 +161,10 @@ def compare_pofiles(pathA, pathB):
     logger = logging.getLogger('destral.utils.compare_pofiles')
     if not isfile(pathA):
         logger.info('Could not get po/pot file: {}'.format(pathA))
-        return -1, -1
+        return [], []
     elif not isfile(pathB):
         logger.info('Could not get po/pot file: {}'.format(pathB))
-        return -1, -1
+        return [], []
     try:
         with open(pathA, 'r') as potA:
             fileA = pofile.read_po(potA)
