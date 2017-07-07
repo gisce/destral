@@ -193,7 +193,7 @@ class OOBaseTests(OOTestCase):
             # Generate POT data from loaded strings
             trans_data = StringIO()
             trans_export(
-                self.config['testing_langs'][0], self.config['module'],
+                False, [self.config['module']],
                 trans_data, 'po', dbname=cursor.dbname
             )
 
