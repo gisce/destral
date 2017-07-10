@@ -12,6 +12,7 @@ setup(
         'click',
         'mamba',
         'coverage',
+        'python-dateutil',
         'babel>=2.4.0'
     ],
     license='GNU GPLv3',
