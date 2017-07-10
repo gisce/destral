@@ -168,23 +168,27 @@ def read_po(po_path):
             data = potB.read()
         from re import sub, findall
         from dateutil.parser import parse as date_parse
-        bad_ft_date = findall(r"POT-Creation-Date: (.*)\\", data)[0]
-        good_ft_date = date_parse(bad_ft_date).strftime('%Y-%m-%d %H:%M')
-        repl_str = r"\1\{}\\".format(good_ft_date)
-        data = sub(r"(POT-Creation-Date: )(.*)\\", repl_str, data)
-        bad_ft_date = findall(r"POT-Creation-Date: (.*)\\", data)[0]
-        good_ft_date = date_parse(bad_ft_date).strftime('%Y-%m-%d %H:%M')
-        repl_str = r"\1\{}\\".format(good_ft_date)
-        data = sub(r"(PO-Revision-Date: )(.*)\\", repl_str, data)
-        with open(po_path, 'w') as potB:
-            potB.write(data)
-        with open(po_path, 'r') as potB:
-            fileB = pofile.read_po(potB)
+        from babel.messages import Catalog
+        replace_string = r'\1 {}\2'.format(
+            date_parse(
+                findall(r"POT-Creation-Date: (.*)\\n", data)[0]
+            ).strftime('%Y-%m-%d %H:%M')
+        )
+        data = sub(r"(POT-Creation-Date:).*(\\n)", replace_string, data)
+        replace_string = r'\1 {}\2'.format(
+            date_parse(
+                findall(r"PO-Revision-Date: (.*)\\n", data)[0]
+            ).strftime('%Y-%m-%d %H:%M')
+        )
+        data = sub(r"(PO-Revision-Date:).*(\\n)", replace_string, data)
+        catalog = Catalog()
+        parser = pofile.PoFileParser(catalog)
+        parser.parse(data)
         logger.warning(
             'Data of POfile {} has bad formatted '
             'creation or revision dates'.format(po_path)
         )
-        return fileB
+        return catalog
 
 
 def compare_pofiles(pathA, pathB):
