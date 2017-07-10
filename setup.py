@@ -12,7 +12,8 @@ setup(
         'click',
         'mamba',
         'coverage',
-        'babel'
+        'python-dateutil',
+        'babel>=2.4.0'
     ],
     license='GNU GPLv3',
     author='GISCE-TI, S.L.',

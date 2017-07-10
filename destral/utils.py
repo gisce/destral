@@ -148,6 +148,48 @@ def coverage_modules_path(modules_to_test, addons_path):
     ]
 
 
+def read_po(po_path):
+    """
+    Read a Po file
+    :param po_path: .po path
+    :return: po content
+    """
+    from babel.messages import pofile
+
+    logger = logging.getLogger('destral.utils.read_po')
+    try:
+        with open(po_path, 'r') as pot:
+            catalog = pofile.read_po(pot)
+            return catalog
+    except ValueError:
+        # If bad formatted data, replace it
+        with open(po_path, 'r') as potB:
+            data = potB.read()
+        from re import sub, findall
+        from dateutil.parser import parse as date_parse
+        from babel.messages import Catalog
+        replace_string = r'\1 {}\2'.format(
+            date_parse(
+                findall(r"POT-Creation-Date: (.*)\\n", data)[0]
+            ).strftime('%Y-%m-%d %H:%M')
+        )
+        data = sub(r"(POT-Creation-Date:).*(\\n)", replace_string, data)
+        replace_string = r'\1 {}\2'.format(
+            date_parse(
+                findall(r"PO-Revision-Date: (.*)\\n", data)[0]
+            ).strftime('%Y-%m-%d %H:%M')
+        )
+        data = sub(r"(PO-Revision-Date:).*(\\n)", replace_string, data)
+        catalog = Catalog()
+        parser = pofile.PoFileParser(catalog)
+        parser.parse(data.split('\n'))
+        logger.warning(
+            'Data of POfile {} has bad formatted '
+            'creation or revision dates'.format(po_path)
+        )
+        return catalog
+
+
 def compare_pofiles(pathA, pathB):
     """
     :param pathA: path to pot/po file
@@ -155,7 +197,6 @@ def compare_pofiles(pathA, pathB):
     :param translate: whether translation should be checked or not
     :return: True if all strings in pathA are in pathB
     """
-    from babel.messages import pofile
     from os.path import isfile
     import logging
     logger = logging.getLogger('destral.utils.compare_pofiles')
@@ -165,42 +206,8 @@ def compare_pofiles(pathA, pathB):
     elif not isfile(pathB):
         logger.info('Could not get po/pot file: {}'.format(pathB))
         return None, None
-    try:
-        with open(pathA, 'r') as potA:
-            fileA = pofile.read_po(potA)
-    except ValueError:
-        # If bad formatted data, replace it
-        with open(pathA, 'r') as potA:
-            data = potA.read()
-        from re import sub
-        data = sub(r"(POT-Creation-Date: )(.*):..\+(.*)\\", r"\1\2\\", data)
-        data = sub(r"(PO-Revision-Date: )(.*):..\+(.*)\\", r"\1\2\\", data)
-        with open(pathA, 'w') as potA:
-            potA.write(data)
-        with open(pathA, 'r') as potA:
-            fileA = pofile.read_po(potA)
-        logger.warning(
-            'Data of POfile {} has bad formatted '
-            'creation or revision dates'.format(pathA)
-        )
-    try:
-        with open(pathB, 'r') as potB:
-            fileB = pofile.read_po(potB)
-    except ValueError:
-        # If bad formatted data, replace it
-        with open(pathB, 'r') as potB:
-            data = potB.read()
-        from re import sub
-        data = sub(r"(POT-Creation-Date: )(.*):..\+(.*)\\", r"\1\2\\", data)
-        data = sub(r"(PO-Revision-Date: )(.*):..\+(.*)\\", r"\1\2\\", data)
-        with open(pathB, 'w') as potB:
-            potB.write(data)
-        with open(pathB, 'r') as potB:
-            fileB = pofile.read_po(potB)
-        logger.warning(
-            'Data of POfile {} has bad formatted '
-            'creation or revision dates'.format(pathB)
-        )
+    fileA = read_po(pathA)
+    fileB = read_po(pathB)
     not_found = []
     not_translated = []
     for msgA in fileA:
