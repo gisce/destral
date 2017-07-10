@@ -218,7 +218,8 @@ class OOBaseTests(OOTestCase):
                 [],
                 missing_strings,
                 'There are {} missing strings in the POT file'
-                ' of the module {}\nThe missing strings are:\n{}'.format(
+                ' of the module {}\nThe missing strings are:\n'
+                '\n{}\n'.format(
                     len(missing_strings), self.config['module'],
                     '\n'.join(missing_strings)
                 )
@@ -242,7 +243,8 @@ class OOBaseTests(OOTestCase):
                     [],
                     missing_strings,
                     'There are {} missing strings in the PO file'
-                    ' of the module {}\nThe missing strings are:\n{}'.format(
+                    ' of the module {}\nThe missing strings are:\n'
+                    '\n{}\n'.format(
                         len(missing_strings), self.config['module'],
                         '\n'.join(missing_strings)
                     )
@@ -252,7 +254,7 @@ class OOBaseTests(OOTestCase):
                     untranslated_strings,
                     'There are {} untranslated strings in the PO file'
                     ' of the module {}\nThe untranslated strings are:\n'
-                    '>>>\n{}\n<<<'.format(
+                    '\n{}\n'.format(
                         len(untranslated_strings), self.config['module'],
                         '\n'.join(untranslated_strings)
                     )
