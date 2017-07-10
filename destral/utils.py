@@ -166,9 +166,16 @@ def read_po(po_path):
         # If bad formatted data, replace it
         with open(po_path, 'r') as potB:
             data = potB.read()
-        from re import sub
-        data = sub(r"(POT-Creation-Date: )(.*):..\+(.*)\\", r"\1\2\\", data)
-        data = sub(r"(PO-Revision-Date: )(.*):..\+(.*)\\", r"\1\2\\", data)
+        from re import sub, findall
+        from dateutil.parser import parse as date_parse
+        bad_ft_date = findall(r"POT-Creation-Date: (.*)\\", data)[0]
+        good_ft_date = date_parse(bad_ft_date).strftime('%Y-%m-%d %H:%M')
+        repl_str = r"\1\{}\\".format(good_ft_date)
+        data = sub(r"(POT-Creation-Date: )(.*)\\", repl_str, data)
+        bad_ft_date = findall(r"POT-Creation-Date: (.*)\\", data)[0]
+        good_ft_date = date_parse(bad_ft_date).strftime('%Y-%m-%d %H:%M')
+        repl_str = r"\1\{}\\".format(good_ft_date)
+        data = sub(r"(PO-Revision-Date: )(.*)\\", repl_str, data)
         with open(po_path, 'w') as potB:
             potB.write(data)
         with open(po_path, 'r') as potB:
