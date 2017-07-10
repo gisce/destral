@@ -12,7 +12,7 @@ setup(
         'click',
         'mamba',
         'coverage',
-        'babel'
+        'babel>=2.4.0'
     ],
     license='GNU GPLv3',
     author='GISCE-TI, S.L.',
