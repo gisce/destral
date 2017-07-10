@@ -159,9 +159,9 @@ def read_po(po_path):
     logger = logging.getLogger('destral.utils.read_po')
 
     try:
-        with open(po_path, 'r') as potB:
-            fileB = pofile.read_po(potB)
-            return fileB
+        with open(po_path, 'r') as pot:
+            catalog = pofile.read_po(pot)
+            return catalog
     except ValueError:
         # If bad formatted data, replace it
         with open(po_path, 'r') as potB:
