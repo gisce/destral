@@ -1,11 +1,12 @@
 # This is some random translation file
+# Using bad formatted POT/PO dates
 
 msgid ""
 msgstr ""
 "Project-Id-Version: 1.0.0\n"
 "Report-Msgid-Bugs-To: fake@destral.org\n"
-"POT-Creation-Date: 2017-06-20 10:00\n"
-"PO-Revision-Date: 2017-06-20 10:00\n"
+"POT-Creation-Date: 2017-06-20 10:00:00+0000\n"
+"PO-Revision-Date: 2017-06-20 10:00+0000\n"
 "Last-Translator: <>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
