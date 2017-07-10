@@ -157,7 +157,6 @@ def read_po(po_path):
     from babel.messages import pofile
 
     logger = logging.getLogger('destral.utils.read_po')
-
     try:
         with open(po_path, 'r') as pot:
             catalog = pofile.read_po(pot)
@@ -183,7 +182,7 @@ def read_po(po_path):
         data = sub(r"(PO-Revision-Date:).*(\\n)", replace_string, data)
         catalog = Catalog()
         parser = pofile.PoFileParser(catalog)
-        parser.parse(data)
+        parser.parse(data.split('\n'))
         logger.warning(
             'Data of POfile {} has bad formatted '
             'creation or revision dates'.format(po_path)
