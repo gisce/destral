@@ -172,8 +172,11 @@ class OOBaseTests(OOTestCase):
             self.openerp.config['addons_path'], self.config['module']
         )
         trad_path = join(mod_path, 'i18n')
-        
-        self.assertTrue(isdir(trad_path), ('Module %s has no translations', self.config['module']))
+
+        self.assertTrue(
+            isdir(trad_path),
+            'Module {} has no translations'.format(self.config['module'])
+        )
 
         if not self.config['testing_langs']:
             logger.warning(
