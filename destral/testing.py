@@ -198,7 +198,7 @@ class OOBaseTests(OOTestCase):
             )
             trans_obj = self.openerp.pool.get('wizard.module.lang.export')
             trans_data = trans_obj.append_report_translations(
-                txn.cursor, txn.user, self.config['module'], 'pot', trans_data
+                txn.cursor, txn.user, [self.config['module']], 'pot', trans_data
             )
 
         with TempDir() as temp:
