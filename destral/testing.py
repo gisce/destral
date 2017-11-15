@@ -168,6 +168,14 @@ class OOBaseTests(OOTestCase):
         from tools import trans_export
         from cStringIO import StringIO
         from utils import compare_pofiles, TempDir
+
+        if not self.config['testing_langs']:
+            logger.warning(
+                'Configuration variable "DESTRAL_TESTING_LANGS" has'
+                ' not been initialized'
+            )
+            return
+
         mod_path = join(
             self.openerp.config['addons_path'], self.config['module']
         )
@@ -178,12 +186,6 @@ class OOBaseTests(OOTestCase):
             'Module {} has no translations'.format(self.config['module'])
         )
 
-        if not self.config['testing_langs']:
-            logger.warning(
-                'Configuration variable "DESTRAL_TESTING_LANGS" has'
-                ' not been initialized'
-            )
-            return
         logger.info(
             'Checking translations for module %s', self.config['module']
         )
