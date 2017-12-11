@@ -321,6 +321,7 @@ def get_spec_suite(module):
         arguments.format = 'progress'
         arguments.no_color = True
         arguments.watch = False
+        arguments.coverage_file = '.coverage'
         factory = application_factory.ApplicationFactory(arguments)
         logger.info('Mamba application factory created for specs: {0}'.format(
             spec_dir
