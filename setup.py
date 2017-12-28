@@ -10,7 +10,7 @@ setup(
         'osconf',
         'expects',
         'click',
-        'mamba==0.8.6',
+        'mamba',
         'coverage',
         'python-dateutil',
         'babel>=2.4.0'
