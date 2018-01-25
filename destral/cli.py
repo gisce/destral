@@ -36,6 +36,11 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
         ci_pull_request = os.environ.get('CI_PULL_REQUEST')
         token = os.environ.get('GITHUB_TOKEN')
         repository = os.environ.get('CI_REPO')
+        try:
+            int(ci_pull_request)
+        except ValueError:
+            # If CI_PULL_REQUEST contains URL instead of PR number, get it
+            ci_pull_request = ci_pull_request.split('/')[-1]
         if ci_pull_request and token and repository:
             url = 'https://api.github.com/repos/{repo}/pulls/{pr_number}'.format(
                 repo=repository,
