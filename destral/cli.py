@@ -35,17 +35,19 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
     if not modules:
         ci_pull_request = os.environ.get('CI_PULL_REQUEST')
         token = os.environ.get('GITHUB_TOKEN')
-        if ci_pull_request and token:
+        repository = os.environ.get('CI_REPO')
+        if ci_pull_request and token and repository:
             url = 'https://api.github.com/repos/{repo}/pulls/{pr_number}'.format(
-                    repo=os.environ.get('CI_REPO'),
-                    pr_number=ci_pull_request
-                )
+                repo=repository,
+                pr_number=ci_pull_request
+            )
             req = urllib2.Request(
                 url,
                 headers={
                     'Authorization': 'token {0}'.format(token),
                     'Accept': 'application/vnd.github.patch'
-            })
+                }
+            )
             f = urllib2.urlopen(req)
             paths = find_files(f.read())
             logger.info('Files from Pull Request: {0}: {1}'.format(
