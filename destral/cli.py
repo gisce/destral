@@ -38,7 +38,7 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
         repository = os.environ.get('CI_REPO')
         try:
             int(ci_pull_request)
-        except ValueError:
+        except:
             # If CI_PULL_REQUEST contains URL instead of PR number, get it
             ci_pull_request = ci_pull_request.split('/')[-1]
         if ci_pull_request and token and repository:
