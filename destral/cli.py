@@ -24,13 +24,20 @@ logger = logging.getLogger('destral.cli')
     allow_extra_args=True))
 @click.option('--modules', '-m', multiple=True)
 @click.option('--tests', '-t', multiple=True)
+@click.option(
+    '--export-translations', type=click.BOOL, default=False, is_flag=True)
 @click.option('--enable-coverage', type=click.BOOL, default=False, is_flag=True)
 @click.option('--report-coverage', type=click.BOOL, default=False, is_flag=True)
 @click.option('--dropdb/--no-dropdb', default=True)
 @click.option('--requirements/--no-requirements', default=True)
-def destral(modules, tests, enable_coverage=None, report_coverage=None,
-            dropdb=None, requirements=None):
+def destral(modules, tests, export_translations=None, enable_coverage=None,
+            report_coverage=None, dropdb=None, requirements=None):
     sys.argv = sys.argv[:1]
+    if not os.environ['DESTRAL_EXPORT_TRANSLATIONS'] and export_translations:
+        os.environ['DESTRAL_EXPORT_TRANSLATIONS'] = export_translations
+    export_translations = os.environ['DESTRAL_EXPORT_TRANSLATIONS']
+    if export_translations:
+        tests = ['OOBaseTests.test_translate_modules']
     service = OpenERPService()
     if not modules:
         ci_pull_request = os.environ.get('CI_PULL_REQUEST')
