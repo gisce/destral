@@ -312,10 +312,11 @@ def get_spec_suite(module):
     :return: suite
     """
     spec_dir = os.path.join(module, 'spec')
-    if os.path.exists(spec_dir):
+    specs_dir = os.path.join(module, 'specs')
+    if os.path.exists(spec_dir) or os.path.exists(specs_dir):
         # Create a fake arguments object
         arguments = type('Arguments', (object, ), {})
-        arguments.specs = [spec_dir]
+        arguments.specs = [spec_dir, specs_dir]
         arguments.slow = 0.075
         arguments.enable_coverage = False
         arguments.format = 'progress'
