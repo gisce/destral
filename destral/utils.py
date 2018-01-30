@@ -126,19 +126,21 @@ def find_files(diff):
 def install_requirements(module, addons_path):
     """Install module requirements and its dependecies
     """
-    logger = logging.getLogger('destral.utils')
-    modules_requirements = get_dependencies(module, addons_path)
-    modules_requirements.append(module)
-    for module_requirements in modules_requirements:
-        req = os.path.join(
-            addons_path,
-            module_requirements,
-            'requirements.txt'
-        )
-        pip = os.path.join(sys.prefix, 'bin', 'pip')
-        if os.path.exists(req) and os.path.exists(pip):
-            logger.info('Requirements file %s found. Installing...', req)
-            subprocess.check_call([pip, "install", "-r", req])
+    pip = os.path.join(sys.prefix, 'bin', 'pip')
+    if os.path.exists(pip):
+        logger = logging.getLogger('destral.utils')
+        modules_requirements = get_dependencies(module, addons_path)
+        modules_requirements.append(module)
+        for module_requirements in modules_requirements:
+            addons_path_module = os.path.join(addons_path, module_requirements)
+            requirements_files = [
+                os.path.join(addons_path_module, 'requirements.txt'),
+                os.path.join(addons_path_module, 'requirements-dev.txt')
+            ]
+            for req in requirements_files:
+                if os.path.exists(req):
+                    logger.info('Requirements file %s found. Installing...', req)
+                    subprocess.check_call([pip, "install", "-r", req])
 
 
 def coverage_modules_path(modules_to_test, addons_path):
