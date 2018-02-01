@@ -124,7 +124,7 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
             suite.drop_database = dropdb
             result = run_unittest_suite(suite)
             coverage.stop()
-            results.append(result.wasSuccessful())
+            results.append(result)
     if report_junitxml:
         for result in results:
             if result.get('junit_suite', False):
@@ -135,7 +135,7 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
     if enable_coverage:
         coverage.save()
 
-    if not all(results):
+    if not all([r.wasSuccessful() for r in results]):
         sys.exit(1)
 
 
