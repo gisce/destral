@@ -25,8 +25,8 @@ logger = logging.getLogger('destral.cli')
 @click.option('--modules', '-m', multiple=True)
 @click.option('--tests', '-t', multiple=True)
 @click.option('--enable-coverage', type=click.BOOL, default=False, is_flag=True)
-@click.option('--report-coverage', type=click.STRING, default=False)
-@click.option('--report-junitxml', type=click.BOOL, default=False, is_flag=True)
+@click.option('--report-coverage', type=click.BOOL, default=False, is_flag=True)
+@click.option('--report-junitxml', type=click.STRING, nargs=1, default=False)
 @click.option('--dropdb/--no-dropdb', default=True)
 @click.option('--requirements/--no-requirements', default=True)
 def destral(modules, tests, enable_coverage=None, report_coverage=None,
@@ -127,10 +127,9 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
             results.append(result.wasSuccessful())
     if report_junitxml:
         for result in results:
-            junit_suite = result.get('junit_suite', False)
-            if junit_suite:
+            if result.get('junit_suite', False):
                 with open(report_junitxml, 'a') as report_file:
-                    report_file.write(junit_suite.to_xml_string())
+                    report_file.write(result.to_xml_string())
     if report_coverage:
         coverage.report()
     if enable_coverage:
