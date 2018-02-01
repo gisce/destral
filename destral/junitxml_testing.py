@@ -78,5 +78,11 @@ class JUnitXMLResult(unittest.result.TestResult):
 class LoggerStream(object):
     @staticmethod
     def write(text):
-        logger = logging.getLogger('destral.testing')
-        logger.error(text)
+        if text == '\n':
+            text = ''
+        logger = logging.getLogger('destral.testing.results')
+        logger.info(text)
+
+    @staticmethod
+    def flush():
+        pass
