@@ -3,6 +3,7 @@ import logging
 import os
 import unittest
 
+from destral.junitxml_testing import JUnitXMLResult, LoggerStream
 from destral.openerp import OpenERPService
 from destral.transaction import Transaction
 from destral.utils import module_exists
@@ -302,7 +303,16 @@ def run_unittest_suite(suite):
     """Run test suite
     """
     logger.info('Running test suit: {0}'.format(suite))
-    return unittest.TextTestRunner(verbosity=2).run(suite)
+    confs = config_from_environment(
+        'DESTRAL', ['verbose', 'junitxml'],
+        verbose=2, junitxml=False
+    )
+    verbose = confs.get('verbose', 2)
+    junitxml = confs.get('junitxml', False)
+    result = JUnitXMLResult if junitxml else unittest.TextTestResult
+    return unittest.TextTestRunner(
+        verbosity=verbose, resultclass=result, stream=LoggerStream
+    ).run(suite)
 
 
 def get_spec_suite(module):
