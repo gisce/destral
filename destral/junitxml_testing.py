@@ -3,6 +3,9 @@ import junit_xml
 import time
 import logging
 
+from mamba import formatters
+from mamba.application_factory import ApplicationFactory
+
 
 class JUnitXMLResult(unittest.result.TestResult):
     def __init__(self, stream=None, descriptions=None, verbosity=None):
@@ -74,8 +77,106 @@ class JUnitXMLResult(unittest.result.TestResult):
     def addSkip(self, test, reason):
         self._end_test(test, type='Skip', out_data=reason)
 
+    def to_xml_string(self):
+        return junit_xml.TestSuite.to_xml_string([self.junit_suite])
+
+
+class JUnitXMLApplicationFactory(ApplicationFactory):
+    def __init__(self, arguments, modulename=False, junitxml_file=False):
+        super(JUnitXMLApplicationFactory, self).__init__(arguments=arguments)
+        self.modulename = modulename
+        self.junitxml_file = junitxml_file
+
+    def create_formatter(self):
+        settings = self.create_settings()
+        if settings.format == 'documentation':
+            return formatters.DocumentationFormatter(settings)
+        elif settings.format == 'junitxml':
+            return JUnitXMLMambaFormatter(settings,
+                                          modulename=self.modulename,
+                                          junitxml_file=self.junitxml_file)
+        else:
+            return formatters.ProgressFormatter(settings)
+
+
+class JUnitXMLMambaFormatter(formatters.Formatter):
+    def __init__(self, settings, modulename=False, junitxml_file=False):
+        self.settings = settings
+        self.result_file = junitxml_file
+        self.junitxml_tests = {}
+        self.junitxml_suites = False
+        self.modulename = modulename
+        self.current_group = False
+        self.current_startedAt = False
+
+    def _end_test(
+            self, example, type='Passed', err_msg='', out_msg='', last=False
+    ):
+        if not last:
+            last = self.current_startedAt
+        self.current_startedAt = time.time()
+        self.junitxml_tests[self.current_group]['tests'].append(
+            junit_xml.TestCase(
+                name=example.name,
+                classname=self.current_group,
+                status=type,
+                elapsed_sec=self.current_startedAt - last,
+                stderr=err_msg,
+                stdout=out_msg
+            )
+        )
+
+    def example_passed(self, example):
+        self._end_test(example, type='Passed')
+
+    def example_failed(self, example):
+        self._end_test(example, type='Failed', err_msg=example.error.exception)
+
+    def example_pending(self, example):
+        self._end_test(example, type='Pending', out_msg='Skipped Example')
+
+    def _start_test_group(self, example_group):
+        self.current_startedAt = time.time()
+        self.current_group = example_group.name
+        if self.current_group not in self.junitxml_tests.keys():
+            self.junitxml_tests[self.current_group] = {
+                'startedAt': self.current_startedAt,
+                'tests': []
+            }
+
+    def example_group_started(self, example_group):
+        self._start_test_group(example_group)
+
+    def example_group_finished(self, example_group):
+        self._end_test(
+            example_group, out_msg='End Group',
+            last=self.junitxml_tests[example_group.name]['startedAt']
+        )
+
+    def example_group_pending(self, example_group):
+        self._start_test_group(example_group)
+        self._end_test(
+            example_group, type='Pending', out_msg='Skipped Group',
+            last=self.junitxml_tests[example_group.name]['startedAt']
+        )
+
+    def summary(self, duration, example_count, failed_count, pending_count):
+        self.junitxml_suites = [
+            junit_xml.TestSuite(
+                name=self.modulename or 'mamba',
+                test_cases=self.junitxml_tests[testgroup]['tests']
+            )
+            for testgroup in self.junitxml_tests.keys()
+        ]
+        if self.result_file:
+            with open(self.result_file, 'a') as result_file:
+                result_file.write(
+                    junit_xml.TestSuite.to_xml_string(self.junitxml_suites)
+                )
+
 
 class LoggerStream(object):
+
     @staticmethod
     def write(text):
         if text == '\n':
