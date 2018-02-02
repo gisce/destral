@@ -98,12 +98,16 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
     coverage = OOCoverage(**coverage_config)
     coverage.enabled = (enable_coverage or report_coverage)
 
+    junitxml_suites = []
+
     coverage.start()
     server_spec_suite = get_spec_suite(root_path)
     if server_spec_suite:
         logging.info('Spec testing for server')
         report = run_spec_suite(server_spec_suite)
         results.append(not len(report.failed_examples) > 0)
+        if report_junitxml:
+            junitxml_suites += report.create_report_suites()
     coverage.stop()
 
     for module in modules_to_test:
@@ -117,6 +121,8 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
                 report = run_spec_suite(spec_suite)
                 coverage.stop()
                 results.append(not len(report.failed_examples) > 0)
+                if report_junitxml:
+                    junitxml_suites += report.create_report_suites()
             logger.info('Unit testing module %s', module)
             os.environ['DESTRAL_MODULE'] = module
             coverage.start()
@@ -124,18 +130,19 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
             suite.drop_database = dropdb
             result = run_unittest_suite(suite)
             coverage.stop()
-            results.append(result)
+            results.append(result.wasSuccessful())
+            if report_junitxml:
+                junitxml_suites.append(result.get_test_suites())
     if report_junitxml:
-        for result in results:
-            if result.get('junit_suite', False):
-                with open(report_junitxml, 'a') as report_file:
-                    report_file.write(result.to_xml_string())
+        from junit_xml import TestSuite
+        with open(report_junitxml, 'a') as report_file:
+            report_file.write(TestSuite.to_xml_string(junitxml_suites))
     if report_coverage:
         coverage.report()
     if enable_coverage:
         coverage.save()
 
-    if not all([r.wasSuccessful() for r in results]):
+    if not all(results):
         sys.exit(1)
 
 

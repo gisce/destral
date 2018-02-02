@@ -4,6 +4,7 @@ import time
 import logging
 
 from mamba import formatters
+from mamba import reporter
 from mamba.application_factory import ApplicationFactory
 
 
@@ -77,8 +78,15 @@ class JUnitXMLResult(unittest.result.TestResult):
     def addSkip(self, test, reason):
         self._end_test(test, type='Skip', out_data=reason)
 
-    def to_xml_string(self):
-        return junit_xml.TestSuite.to_xml_string([self.junit_suite])
+    def get_test_suites(self):
+        return self.junit_suite
+
+    def to_xml_string(self, test_suites=False):
+        if not test_suites:
+            test_suites = []
+        if self.junit_suite not in test_suites:
+            test_suites.append(self.junit_suite)
+        return junit_xml.TestSuite.to_xml_string(test_suites)
 
 
 class JUnitXMLApplicationFactory(ApplicationFactory):
@@ -97,6 +105,22 @@ class JUnitXMLApplicationFactory(ApplicationFactory):
                                           junitxml_file=self.junitxml_file)
         else:
             return formatters.ProgressFormatter(settings)
+
+    def create_reporter(self):
+        settings = self.create_settings()
+        if settings.format == 'junitxml':
+            return JUnitXMLMambaReporter(self.create_formatter())
+        return super(JUnitXMLApplicationFactory, self).create_reporter()
+
+
+class JUnitXMLMambaReporter(reporter.Reporter):
+    def create_report_suites(self):
+        suites = []
+        for listener in self.listeners:
+            suites += listener.summary(
+                self.duration, self.example_count,
+                self.failed_count, self.pending_count)
+        return suites
 
 
 class JUnitXMLMambaFormatter(formatters.Formatter):
@@ -137,17 +161,27 @@ class JUnitXMLMambaFormatter(formatters.Formatter):
 
     def _start_test_group(self, example_group):
         self.current_startedAt = time.time()
-        self.current_group = example_group.name
-        if self.current_group not in self.junitxml_tests.keys():
-            self.junitxml_tests[self.current_group] = {
+        if not self.current_group:
+            self.junitxml_tests['Total'] = {
                 'startedAt': self.current_startedAt,
-                'tests': []
+                'tests': [],
+                'pre_group': False
             }
+            self.current_group = 'Total'
+        if example_group.name not in self.junitxml_tests.keys():
+            self.junitxml_tests[example_group.name] = {
+                'startedAt': self.current_startedAt,
+                'tests': [],
+                'pre_group': self.current_group or False
+            }
+        self.current_group = example_group.name
 
     def example_group_started(self, example_group):
         self._start_test_group(example_group)
 
     def example_group_finished(self, example_group):
+        self.current_group = self.junitxml_tests[example_group.name].get(
+            'pre_group', False) or 'Total'
         self._end_test(
             example_group, out_msg='End Group',
             last=self.junitxml_tests[example_group.name]['startedAt']
@@ -155,6 +189,8 @@ class JUnitXMLMambaFormatter(formatters.Formatter):
 
     def example_group_pending(self, example_group):
         self._start_test_group(example_group)
+        self.current_group = self.junitxml_tests[example_group.name].get(
+            'pre_group', False) or 'Total'
         self._end_test(
             example_group, type='Pending', out_msg='Skipped Group',
             last=self.junitxml_tests[example_group.name]['startedAt']
@@ -168,11 +204,7 @@ class JUnitXMLMambaFormatter(formatters.Formatter):
             )
             for testgroup in self.junitxml_tests.keys()
         ]
-        if self.result_file:
-            with open(self.result_file, 'a') as result_file:
-                result_file.write(
-                    junit_xml.TestSuite.to_xml_string(self.junitxml_suites)
-                )
+        return self.junitxml_suites
 
 
 class LoggerStream(object):
