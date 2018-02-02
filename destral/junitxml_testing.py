@@ -38,10 +38,6 @@ class JUnitXMLResult(unittest.result.TestResult):
 
     def printErrors(self):
         self.endedAt = time.time()
-        self.junit_suite = junit_xml.TestSuite(
-            name=self.modulename,
-            test_cases=self.ran_tests
-        )
 
     def startTest(self, test):
         self._time_tests.append({
@@ -91,16 +87,11 @@ class JUnitXMLResult(unittest.result.TestResult):
     def addSkip(self, test, reason):
         self._end_test(test, type='Skip', out_data=reason)
 
-    def get_test_suites(self):
-        return self.junit_suite
-
-    def to_xml_string(self, test_suites=False):
-        if not test_suites:
-            test_suites = []
-        if self.junit_suite not in test_suites:
-            test_suites.append(self.junit_suite)
-        return junit_xml.TestSuite.to_xml_string(test_suites)
-
+    def get_test_suite(self, module_name):
+        return junit_xml.TestSuite(
+            name=module_name,
+            test_cases=self.ran_tests
+        )
 
 # MAMBA JUNITXML
 
@@ -218,6 +209,6 @@ class JUnitXMLMambaFormatter(formatters.Formatter):
             for test in self.junitxml_tests[testgroup]['tests']:
                 all_tests.append(test)
         return junit_xml.TestSuite(
-            name='{}/{}'.format('mamba', self.modulename),
+            name='{}.{}'.format('mamba', self.modulename),
             test_cases=all_tests
         )
