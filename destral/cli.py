@@ -26,12 +26,21 @@ logger = logging.getLogger('destral.cli')
 @click.option('--tests', '-t', multiple=True)
 @click.option('--enable-coverage', type=click.BOOL, default=False, is_flag=True)
 @click.option('--report-coverage', type=click.BOOL, default=False, is_flag=True)
+@click.option('--report-junitxml', type=click.STRING, nargs=1, default=False)
 @click.option('--dropdb/--no-dropdb', default=True)
 @click.option('--requirements/--no-requirements', default=True)
 def destral(modules, tests, enable_coverage=None, report_coverage=None,
-            dropdb=None, requirements=None):
+            report_junitxml=None, dropdb=None, requirements=None):
     sys.argv = sys.argv[:1]
     service = OpenERPService()
+    if report_junitxml:
+        os.environ['DESTRAL_JUNITXML'] = report_junitxml
+    else:
+        report_junitxml = os.environ.get('DESTRAL_JUNITXML', False)
+    if report_junitxml:
+        junitxml_directory = os.path.abspath(report_junitxml)
+        if not os.path.isdir(junitxml_directory):
+            os.makedirs(junitxml_directory)
     if not modules:
         ci_pull_request = os.environ.get('CI_PULL_REQUEST')
         token = os.environ.get('GITHUB_TOKEN')
@@ -89,12 +98,16 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
     coverage = OOCoverage(**coverage_config)
     coverage.enabled = (enable_coverage or report_coverage)
 
+    junitxml_suites = []
+
     coverage.start()
     server_spec_suite = get_spec_suite(root_path)
     if server_spec_suite:
         logging.info('Spec testing for server')
         report = run_spec_suite(server_spec_suite)
         results.append(not len(report.failed_examples) > 0)
+        if report_junitxml:
+            junitxml_suites += report.create_report_suites()
     coverage.stop()
 
     for module in modules_to_test:
@@ -108,6 +121,8 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
                 report = run_spec_suite(spec_suite)
                 coverage.stop()
                 results.append(not len(report.failed_examples) > 0)
+                if report_junitxml:
+                    junitxml_suites += report.create_report_suites()
             logger.info('Unit testing module %s', module)
             os.environ['DESTRAL_MODULE'] = module
             coverage.start()
@@ -116,6 +131,15 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
             result = run_unittest_suite(suite)
             coverage.stop()
             results.append(result.wasSuccessful())
+            if report_junitxml:
+                junitxml_suites.append(result.get_test_suite(module))
+    if report_junitxml:
+        from junit_xml import TestSuite
+        for suite in junitxml_suites:
+            with open(
+                    os.path.join(report_junitxml, suite.name+'.xml'), 'w'
+            ) as report_file:
+                report_file.write(TestSuite.to_xml_string([suite]))
     if report_coverage:
         coverage.report()
     if enable_coverage:

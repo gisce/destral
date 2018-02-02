@@ -13,7 +13,8 @@ setup(
         'mamba',
         'coverage',
         'python-dateutil',
-        'babel>=2.4.0'
+        'babel>=2.4.0',
+        'junit_xml'
     ],
     license='GNU GPLv3',
     author='GISCE-TI, S.L.',

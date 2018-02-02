@@ -3,11 +3,13 @@ import logging
 import os
 import unittest
 
+from destral.junitxml_testing import JUnitXMLResult, LoggerStream
+from destral.junitxml_testing import JUnitXMLApplicationFactory
+from destral.junitxml_testing import JUnitXMLMambaFormatter
 from destral.openerp import OpenERPService
 from destral.transaction import Transaction
 from destral.utils import module_exists
 from osconf import config_from_environment
-from mamba import application_factory
 
 
 logger = logging.getLogger('destral.testing')
@@ -302,7 +304,16 @@ def run_unittest_suite(suite):
     """Run test suite
     """
     logger.info('Running test suit: {0}'.format(suite))
-    return unittest.TextTestRunner(verbosity=2).run(suite)
+    confs = config_from_environment(
+        'DESTRAL', ['verbose', 'junitxml'],
+        verbose=2, junitxml=False
+    )
+    verbose = confs.get('verbose', 2)
+    junitxml = confs.get('junitxml', False)
+    result = JUnitXMLResult if junitxml else unittest.TextTestResult
+    return unittest.TextTestRunner(
+        verbosity=verbose, resultclass=result, stream=LoggerStream
+    ).run(suite)
 
 
 def get_spec_suite(module):
@@ -313,18 +324,25 @@ def get_spec_suite(module):
     """
     spec_dir = os.path.join(module, 'spec')
     specs_dir = os.path.join(module, 'specs')
+    junitxml = config_from_environment(
+        'DESTRAL', ['verbose', 'junitxml'],
+        verbose=2, junitxml=False
+    ).get('junitxml', False)
     if os.path.exists(spec_dir) or os.path.exists(specs_dir):
         # Create a fake arguments object
         arguments = type('Arguments', (object, ), {})
         arguments.specs = [spec_dir, specs_dir]
         arguments.slow = 0.075
         arguments.enable_coverage = False
-        arguments.format = 'progress'
+        arguments.format = 'junitxml' if junitxml else 'progress'
         arguments.no_color = True
         arguments.watch = False
         arguments.coverage_file = '.coverage'
         arguments.tags = None
-        factory = application_factory.ApplicationFactory(arguments)
+        if 'erp/server/bin' in module:
+            module = 'root_path'
+        factory = JUnitXMLApplicationFactory(
+            arguments, modulename=module, junitxml_file=junitxml)
         logger.info('Mamba application factory created for specs: {0}'.format(
             spec_dir
         ))
