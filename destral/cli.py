@@ -132,7 +132,7 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
             coverage.stop()
             results.append(result.wasSuccessful())
             if report_junitxml:
-                junitxml_suites.append(result.get_test_suites())
+                junitxml_suites.append(result.get_test_suite(module))
     if report_junitxml:
         from junit_xml import TestSuite
         for suite in junitxml_suites:
