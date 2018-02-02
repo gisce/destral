@@ -218,8 +218,8 @@ class JUnitXMLMambaFormatter(formatters.Formatter):
     def summary(self, duration, example_count, failed_count, pending_count):
         all_tests = []
         for testgroup in self.junitxml_tests.keys():
-            for test in self.junitxml_tests[testgroup]:
-                all_tests.append(self.junitxml_tests[testgroup][test])
+            for test in self.junitxml_tests[testgroup]['tests']:
+                all_tests.append(test)
         return junit_xml.TestSuite(
             name='{}/{}'.format('mamba', self.modulename),
             test_cases=all_tests
