@@ -202,7 +202,7 @@ class JUnitXMLMambaFormatter(formatters.Formatter):
         self.current_group = self.junitxml_tests[example_group.name].get(
             'pre_group', False) or 'Total'
         self._end_test(
-            example_group, out_msg='End Group',
+            example_group, out_msg='Passed Group',
             last=self.junitxml_tests[example_group.name]['startedAt']
         )
 

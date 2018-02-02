@@ -339,6 +339,8 @@ def get_spec_suite(module):
         arguments.watch = False
         arguments.coverage_file = '.coverage'
         arguments.tags = None
+        if 'erp/server/bin' in module:
+            module = 'root_path'
         factory = JUnitXMLApplicationFactory(
             arguments, modulename=module, junitxml_file=junitxml)
         logger.info('Mamba application factory created for specs: {0}'.format(

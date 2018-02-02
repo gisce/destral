@@ -135,7 +135,7 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
                 junitxml_suites.append(result.get_test_suites())
     if report_junitxml:
         from junit_xml import TestSuite
-        with open(report_junitxml, 'a') as report_file:
+        with open(report_junitxml, 'w') as report_file:
             report_file.write(TestSuite.to_xml_string(junitxml_suites))
     if report_coverage:
         coverage.report()
