@@ -38,7 +38,7 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
     else:
         report_junitxml = os.environ.get('DESTRAL_JUNITXML', False)
     if report_junitxml:
-        junitxml_directory = os.path.dirname(os.path.abspath(report_junitxml))
+        junitxml_directory = os.path.abspath(report_junitxml)
         if not os.path.isdir(junitxml_directory):
             os.makedirs(junitxml_directory)
     if not modules:
@@ -135,8 +135,11 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
                 junitxml_suites.append(result.get_test_suites())
     if report_junitxml:
         from junit_xml import TestSuite
-        with open(report_junitxml, 'w') as report_file:
-            report_file.write(TestSuite.to_xml_string(junitxml_suites))
+        for suite in junitxml_suites:
+            with open(
+                    os.path.join(report_junitxml, suite.name+'.xml'), 'w'
+            ) as report_file:
+                report_file.write(TestSuite.to_xml_string([suite]))
     if report_coverage:
         coverage.report()
     if enable_coverage:
