@@ -7,6 +7,22 @@ from mamba import formatters
 from mamba import reporter
 from mamba.application_factory import ApplicationFactory
 
+# UNITTEST JUNITXML
+
+
+class LoggerStream(object):
+
+    @staticmethod
+    def write(text):
+        if text == '\n':
+            text = ''
+        logger = logging.getLogger('destral.testing.results')
+        logger.info(text)
+
+    @staticmethod
+    def flush():
+        pass
+
 
 class JUnitXMLResult(unittest.result.TestResult):
     def __init__(self, stream=None, descriptions=None, verbosity=None):
@@ -87,6 +103,9 @@ class JUnitXMLResult(unittest.result.TestResult):
         if self.junit_suite not in test_suites:
             test_suites.append(self.junit_suite)
         return junit_xml.TestSuite.to_xml_string(test_suites)
+
+
+# MAMBA JUNITXML
 
 
 class JUnitXMLApplicationFactory(ApplicationFactory):
@@ -205,17 +224,3 @@ class JUnitXMLMambaFormatter(formatters.Formatter):
             for testgroup in self.junitxml_tests.keys()
         ]
         return self.junitxml_suites
-
-
-class LoggerStream(object):
-
-    @staticmethod
-    def write(text):
-        if text == '\n':
-            text = ''
-        logger = logging.getLogger('destral.testing.results')
-        logger.info(text)
-
-    @staticmethod
-    def flush():
-        pass
