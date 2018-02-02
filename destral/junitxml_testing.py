@@ -30,7 +30,6 @@ class JUnitXMLResult(unittest.result.TestResult):
         self.junit_suite = False
         self.ran_tests = []
         self._time_tests = []
-        self.modulename = False
         self.startedAt = None
         self.endedAt = None
 
@@ -49,8 +48,6 @@ class JUnitXMLResult(unittest.result.TestResult):
             'start': time.time(),
             'end': False
         })
-        if not self.modulename:
-            self.modulename = str(test).split()[-1][1:-1]
         super(JUnitXMLResult, self).startTest(test)
 
     def _end_test(self, test, type='Success', err_data=None, out_data=''):
@@ -64,7 +61,7 @@ class JUnitXMLResult(unittest.result.TestResult):
         if not self._time_tests[test_index]['end']:
             self._time_tests[test_index]['end'] = endtime
         test_name = str(test).split()[0]
-        test_classname = self.modulename or 'destral'
+        test_classname = str(test).split()[-1][1:-1]
         err_text = ''
         if err_data:
             err_text = self._exc_info_to_string(err_data, test)
