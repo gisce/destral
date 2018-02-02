@@ -136,9 +136,9 @@ class JUnitXMLMambaReporter(reporter.Reporter):
     def create_report_suites(self):
         suites = []
         for listener in self.listeners:
-            suites += listener.summary(
+            suites.append(listener.summary(
                 self.duration, self.example_count,
-                self.failed_count, self.pending_count)
+                self.failed_count, self.pending_count))
         return suites
 
 
@@ -216,11 +216,11 @@ class JUnitXMLMambaFormatter(formatters.Formatter):
         )
 
     def summary(self, duration, example_count, failed_count, pending_count):
-        self.junitxml_suites = [
-            junit_xml.TestSuite(
-                name=self.modulename or 'mamba',
-                test_cases=self.junitxml_tests[testgroup]['tests']
-            )
-            for testgroup in self.junitxml_tests.keys()
-        ]
-        return self.junitxml_suites
+        all_tests = []
+        for testgroup in self.junitxml_tests.keys():
+            for test in self.junitxml_tests[testgroup]:
+                all_tests.append(self.junitxml_tests[testgroup][test])
+        return junit_xml.TestSuite(
+            name='{}/{}'.format('mamba', self.modulename),
+            test_cases=all_tests
+        )
