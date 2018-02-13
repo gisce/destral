@@ -140,6 +140,7 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
                     os.path.join(report_junitxml, suite.name+'.xml'), 'w'
             ) as report_file:
                 report_file.write(TestSuite.to_xml_string([suite]))
+        logger.info('Saved report XML on {}/'.format(report_junitxml))
     if report_coverage:
         coverage.report()
     if enable_coverage:
