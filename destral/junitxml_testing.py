@@ -27,7 +27,6 @@ class LoggerStream(object):
 class JUnitXMLResult(unittest.result.TestResult):
     def __init__(self, stream=None, descriptions=None, verbosity=None):
         super(JUnitXMLResult, self).__init__(stream, descriptions, verbosity)
-        self.junit_suite = False
         self.ran_tests = []
         self._time_tests = []
         self.startedAt = None
@@ -61,14 +60,29 @@ class JUnitXMLResult(unittest.result.TestResult):
         err_text = ''
         if err_data:
             err_text = self._exc_info_to_string(err_data, test)
-        self.ran_tests.append(junit_xml.TestCase(
+        testcase = junit_xml.TestCase(
             name=test_name,
             classname=test_classname,
             elapsed_sec=(endtime - start_time),
             stdout=out_data,
-            stderr=err_text,
             status=type
-        ))
+        )
+        if testcase.status == 'Error':
+            testcase.add_error_info(
+                message='Error At {}'.format(test_name),
+                output=err_text
+            )
+        elif testcase.status == 'Failure':
+            testcase.add_failure_info(
+                message='Failure At {}'.format(test_name),
+                output=err_text
+            )
+        elif testcase.status == 'Skip':
+            testcase.add_skipped_info(
+                message='Skipped {}'.format(test_name),
+                output=out_data
+            )
+        self.ran_tests.append(testcase)
 
     def stopTest(self, test):
         self._end_test(test, type='Stopped')
@@ -79,7 +93,7 @@ class JUnitXMLResult(unittest.result.TestResult):
         super(JUnitXMLResult, self).addError(test, err)
 
     def addFailure(self, test, err):
-        self._end_test(test, err_data=err, type='Error')
+        self._end_test(test, err_data=err, type='Failure')
 
     def addSuccess(self, test):
         self._end_test(test)
