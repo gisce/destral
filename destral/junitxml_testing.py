@@ -94,12 +94,15 @@ class JUnitXMLResult(unittest.result.TestResult):
 
     def addFailure(self, test, err):
         self._end_test(test, err_data=err, type='Failure')
+        super(JUnitXMLResult, self).addFailure(test, err)
 
     def addSuccess(self, test):
         self._end_test(test)
+        super(JUnitXMLResult, self).addSuccess(test)
 
     def addSkip(self, test, reason):
         self._end_test(test, type='Skip', out_data=reason)
+        super(JUnitXMLResult, self).addSkip(test, reason)
 
     def get_test_suite(self, module_name):
         return junit_xml.TestSuite(
