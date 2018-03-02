@@ -91,8 +91,6 @@ def destral(modules, tests, export_translations=False, enable_coverage=None, rep
                 modules_to_test.append(module)
     else:
         modules_to_test = modules[:]
-    print(modules_to_test)
-    exit(-1)
     results = []
     addons_path = service.config['addons_path']
     root_path = service.config['root_path']
