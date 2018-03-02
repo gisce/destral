@@ -20,8 +20,8 @@ class OOTestSuite(unittest.TestSuite):
     def __init__(self, tests=()):
         super(OOTestSuite, self).__init__(tests)
         self.config = config_from_environment(
-            'DESTRAL', ['module', 'testing_langs'],
-            use_template=True, testing_langs=[]
+            'DESTRAL', ['module', 'testing_langs', 'export_translations'],
+            use_template=True, testing_langs=[], export_translations=False
         )
         ooconfig = {}
         self.config['use_template'] = False
@@ -204,6 +204,14 @@ class OOBaseTests(OOTestCase):
             trans_data = trans_obj.append_report_translations(
                 txn.cursor, txn.user, [self.config['module']], 'pot', trans_data
             )
+        if self.config['export_translations']:
+            with open(
+                    join(
+                        mod_path, 'i18n',
+                        '{modname}.pot'.format(modname=self.config['module'])
+                    ), 'w') as pot:
+                pot.write(trans_data.getvalue())
+            return True
 
         with TempDir() as temp:
             tmp_pot = '{}/{}.pot'.format(temp.dir, self.config['module'])

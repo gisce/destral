@@ -11,6 +11,7 @@ from destral.testing import run_spec_suite, get_spec_suite
 from destral.openerp import OpenERPService
 from destral.patch import RestorePatchedRegisterAll
 from destral.cover import OOCoverage
+from tqdm import tqdm
 
 LOG_FORMAT = '%(asctime)s:{0}'.format(logging.BASIC_FORMAT)
 
@@ -24,14 +25,23 @@ logger = logging.getLogger('destral.cli')
     allow_extra_args=True))
 @click.option('--modules', '-m', multiple=True)
 @click.option('--tests', '-t', multiple=True)
+@click.option(
+    '--export-translations', type=click.BOOL, default=False, is_flag=True)
 @click.option('--enable-coverage', type=click.BOOL, default=False, is_flag=True)
 @click.option('--report-coverage', type=click.BOOL, default=False, is_flag=True)
 @click.option('--report-junitxml', type=click.STRING, nargs=1, default=False)
 @click.option('--dropdb/--no-dropdb', default=True)
 @click.option('--requirements/--no-requirements', default=True)
-def destral(modules, tests, enable_coverage=None, report_coverage=None,
+def destral(modules, tests, export_translations=False, enable_coverage=None, report_coverage=None,
             report_junitxml=None, dropdb=None, requirements=None):
     sys.argv = sys.argv[:1]
+    if not export_translations:
+        export_translations = False
+    if not os.environ.get('DESTRAL_EXPORT_TRANSLATIONS', False):
+        os.environ['DESTRAL_EXPORT_TRANSLATIONS'] = str(export_translations)
+    export_translations = eval(os.environ.get('DESTRAL_EXPORT_TRANSLATIONS', "False"))
+    if export_translations:
+        tests = ['OOBaseTests.test_translate_modules']
     service = OpenERPService()
     if report_junitxml:
         os.environ['DESTRAL_JUNITXML'] = report_junitxml
@@ -69,21 +79,23 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
             ))
         else:
             paths = subprocess.check_output([
-                "git", "diff", "--name-only", "HEAD~1..HEAD"
+                "git", "diff", "--name-only", "HEAD~1..v2.86.3"
             ])
             paths = [x for x in paths.split('\n') if x]
         modules_to_test = []
         for path in paths:
+            if '__terp__' in path:
+                continue
             module = detect_module(path)
             if module and module not in modules_to_test:
                 modules_to_test.append(module)
     else:
         modules_to_test = modules[:]
-
+    print(modules_to_test)
+    exit(-1)
     results = []
     addons_path = service.config['addons_path']
     root_path = service.config['root_path']
-
     if not modules_to_test:
         coverage_config = {
             'source': [root_path],
@@ -109,30 +121,36 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
         if report_junitxml:
             junitxml_suites += report.create_report_suites()
     coverage.stop()
-
-    for module in modules_to_test:
-        with RestorePatchedRegisterAll():
-            if requirements:
-                install_requirements(module, addons_path)
-            spec_suite = get_spec_suite(os.path.join(addons_path, module))
-            if spec_suite:
-                logger.info('Spec testing module %s', module)
+    failed_modules = []
+    for module in tqdm(modules_to_test):
+        try:
+            logger.info('Testing Module: {}'.format(module))
+            with RestorePatchedRegisterAll():
+                if requirements:
+                    install_requirements(module, addons_path)
+                spec_suite = get_spec_suite(os.path.join(addons_path, module))
+                if spec_suite:
+                    logger.info('Spec testing module %s', module)
+                    coverage.start()
+                    report = run_spec_suite(spec_suite)
+                    coverage.stop()
+                    results.append(not len(report.failed_examples) > 0)
+                    if report_junitxml:
+                        junitxml_suites += report.create_report_suites()
+                logger.info('Unit testing module %s', module)
+                os.environ['DESTRAL_MODULE'] = module
                 coverage.start()
-                report = run_spec_suite(spec_suite)
+                suite = get_unittest_suite(module, tests)
+                suite.drop_database = dropdb
+                result = run_unittest_suite(suite)
                 coverage.stop()
-                results.append(not len(report.failed_examples) > 0)
+                results.append(result.wasSuccessful())
                 if report_junitxml:
-                    junitxml_suites += report.create_report_suites()
-            logger.info('Unit testing module %s', module)
-            os.environ['DESTRAL_MODULE'] = module
-            coverage.start()
-            suite = get_unittest_suite(module, tests)
-            suite.drop_database = dropdb
-            result = run_unittest_suite(suite)
-            coverage.stop()
-            results.append(result.wasSuccessful())
-            if report_junitxml:
-                junitxml_suites.append(result.get_test_suite(module))
+                    junitxml_suites.append(result.get_test_suite(module))
+        except Exception as err:
+            failed_modules.append((module, err))
+    print('FAILED MODULES:')
+    print(failed_modules)
     if report_junitxml:
         from junit_xml import TestSuite
         for suite in junitxml_suites:
