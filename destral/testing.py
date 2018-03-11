@@ -346,7 +346,7 @@ def get_spec_suite(module):
         logger.info('Mamba application factory created for specs: {0}'.format(
             spec_dir
         ))
-        return factory.create_runner()
+        return factory.runner()
     return None
 
 
