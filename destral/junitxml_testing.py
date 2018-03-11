@@ -119,8 +119,8 @@ class JUnitXMLApplicationFactory(ApplicationFactory):
         self.modulename = modulename
         self.junitxml_file = junitxml_file
 
-    def create_formatter(self):
-        settings = self.create_settings()
+    def _formatter(self):
+        settings = self._settings(self.arguments)
         if settings.format == 'documentation':
             return formatters.DocumentationFormatter(settings)
         elif settings.format == 'junitxml':
@@ -130,11 +130,11 @@ class JUnitXMLApplicationFactory(ApplicationFactory):
         else:
             return formatters.ProgressFormatter(settings)
 
-    def create_reporter(self):
-        settings = self.create_settings()
+    def _reporter(self):
+        settings = self._settings(self.arguments)
         if settings.format == 'junitxml':
-            return JUnitXMLMambaReporter(self.create_formatter())
-        return super(JUnitXMLApplicationFactory, self).create_reporter()
+            return JUnitXMLMambaReporter(self._formatter())
+        return super(JUnitXMLApplicationFactory, self)._reporter()
 
 
 class JUnitXMLMambaReporter(reporter.Reporter):
