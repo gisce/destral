@@ -11,6 +11,7 @@ setup(
         'expects',
         'click',
         'mamba',
+        'mock',
         'coverage',
         'python-dateutil',
         'babel>=2.4.0',
