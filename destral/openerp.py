@@ -41,16 +41,23 @@ class OpenERPService(object):
         self.db = None
         self.pool = None
         if 'db_name' in config:
-            self.db_name = config['db_name']
+            try:
+                self.db_name = config['db_name']
+            except Exception as e:
+                logger.info(
+                    "Error opening named database '%s', creating it",
+                    config['db_name'])
+                self.db_name = self.create_database(False, db_name=config['db_name'])
         # Stop the cron
         netsvc.Agent.quit()
 
-    def create_database(self, template=True):
+    def create_database(self, template=True, db_name=None):
         """Creates a new database.
 
         :param template: use a template (name must be `base`) (default True)
         """
-        db_name = 'test_' + str(int(time.time()))
+        if db_name is None:
+            db_name = 'test_' + str(int(time.time()))
         import sql_db
         conn = sql_db.db_connect('postgres')
         cursor = conn.cursor()
