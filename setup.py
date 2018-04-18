@@ -14,7 +14,8 @@ setup(
         'coverage',
         'python-dateutil',
         'babel>=2.4.0',
-        'junit_xml'
+        'junit_xml',
+        'psycopg2',
     ],
     license='GNU GPLv3',
     author='GISCE-TI, S.L.',
