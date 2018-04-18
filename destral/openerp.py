@@ -3,6 +3,7 @@ import time
 
 from osconf import config_from_environment
 from destral.utils import update_config
+import psycopg2
 
 
 logger = logging.getLogger('destral.openerp')
@@ -43,7 +44,7 @@ class OpenERPService(object):
         if 'db_name' in config:
             try:
                 self.db_name = config['db_name']
-            except Exception as e:
+            except psycopg2.OperationalError as e:
                 logger.info(
                     "Error opening named database '%s', creating it",
                     config['db_name'])
