@@ -86,6 +86,13 @@ class OpenERPService(object):
         try:
             logger.info('Droping database %s', self.db_name)
             cursor.autocommit(True)
+            logger.info('Disconnect all sessions from database %s', self.db_name)
+            cursor.execute(
+                "SELECT pg_terminate_backend(pg_stat_activity.pid) "
+                " FROM pg_stat_activity "
+                " WHERE pg_stat_activity.datname = '{}'"
+                " AND pid <> pg_backend_pid() ".format(self.db_name)
+            )
             cursor.execute('DROP DATABASE ' + self.db_name)
         finally:
             cursor.close()
