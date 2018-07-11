@@ -54,7 +54,7 @@ Variables definition
   The langs to be used while checking the translations of each module. This variable
   is mandatory as it should always be provided.
   The langs provided must always be in a Python formated list, such as:
-    `export DESTRAL_TESTING_LANGS = ['en_US']`
+  `export DESTRAL_TESTING_LANGS = ['en_US']`
 
 Configuring OpenERP
 ===================
