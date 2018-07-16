@@ -94,7 +94,7 @@ class OOTestCaseWithCursor(OOTestCase):
 
     def setUp(self):
         self.txn = Transaction().start(self.database)
-        self.cursor = self.txn.cursor()
+        self.cursor = self.txn.cursor
         self.uid = self.txn.user
 
     def tearDown(self):
