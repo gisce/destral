@@ -72,6 +72,9 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
                 "git", "diff", "--name-only", "HEAD~1..HEAD"
             ])
             paths = [x for x in paths.split('\n') if x]
+            logger.info('Files from last commit: {}'.format(
+                ', '.join(paths)
+            ))
         modules_to_test = []
         for path in paths:
             module = detect_module(path)
