@@ -112,7 +112,8 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
         if report_junitxml:
             junitxml_suites += report.create_report_suites()
     coverage.stop()
-
+    
+    logger.info('Modules to test: {}'.format(','.join(modules_to_test)))
     for module in modules_to_test:
         with RestorePatchedRegisterAll():
             if requirements:
