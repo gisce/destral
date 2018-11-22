@@ -171,7 +171,8 @@ class OOBaseTests(OOTestCase):
         from cStringIO import StringIO
         from utils import compare_pofiles, TempDir
 
-        if not self.config['testing_langs']:
+        if not self.config['testing_langs'] and \
+                not self.config['export_translations']:
             logger.warning(
                 'Configuration variable "DESTRAL_TESTING_LANGS" has'
                 ' not been initialized'
