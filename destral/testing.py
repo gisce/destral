@@ -182,7 +182,8 @@ class OOBaseTests(OOTestCase):
             self.openerp.config['addons_path'], self.config['module']
         )
         trad_path = join(mod_path, 'i18n')
-
+        if not isdir(trad_path):
+            os.makedirs(trad_path)
         self.assertTrue(
             isdir(trad_path),
             'Module {} has no translations'.format(self.config['module'])

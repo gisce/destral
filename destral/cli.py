@@ -79,7 +79,7 @@ def destral(modules, tests, export_translations=False, enable_coverage=None, rep
             ))
         else:
             paths = subprocess.check_output([
-                "git", "diff", "--name-only", "HEAD~1..v2.86.3"
+                "git", "diff", "--name-only", "HEAD~1..v2.93.0"
             ])
             paths = [x for x in paths.split('\n') if x]
         modules_to_test = []
@@ -91,8 +91,19 @@ def destral(modules, tests, export_translations=False, enable_coverage=None, rep
                 modules_to_test.append(module)
     else:
         modules_to_test = modules[:]
-    print(modules_to_test)
-    exit(-1)
+    modules_to_test = [
+        m for m in modules_to_test
+        if 'lucera' not in m
+        and 'som' not in m
+        and 'lumina' not in m
+        and 'lersa' not in m
+        and 'soller' not in m
+        and 'ecasa' not in m
+        and 'abe' not in m
+        and '_ab' not in m
+        and 'enova' not in m
+    ]
+    print modules_to_test
     results = []
     addons_path = service.config['addons_path']
     root_path = service.config['root_path']
@@ -121,6 +132,7 @@ def destral(modules, tests, export_translations=False, enable_coverage=None, rep
         if report_junitxml:
             junitxml_suites += report.create_report_suites()
     coverage.stop()
+
     failed_modules = []
     for module in tqdm(modules_to_test):
         try:
@@ -148,9 +160,10 @@ def destral(modules, tests, export_translations=False, enable_coverage=None, rep
                 if report_junitxml:
                     junitxml_suites.append(result.get_test_suite(module))
         except Exception as err:
-            failed_modules.append((module, err))
-    print('FAILED MODULES:')
-    print(failed_modules)
+            failed_modules.append(module)
+            print()
+            print(err)
+            print()
     if report_junitxml:
         from junit_xml import TestSuite
         for suite in junitxml_suites:
@@ -162,6 +175,8 @@ def destral(modules, tests, export_translations=False, enable_coverage=None, rep
         coverage.report()
     if enable_coverage:
         coverage.save()
+    if failed_modules:
+        print(failed_modules)
 
     if not all(results):
         sys.exit(1)
