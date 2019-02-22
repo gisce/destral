@@ -162,9 +162,12 @@ class OOBaseTests(OOTestCase):
                         ('model_id.id', '=', model_id)
                     ])
                     if not access_ids:
-                        no_access.append(
-                            '.'.join(imd.name.split('_')[1:])
-                        )
+                        if '.test' in imd.name:
+                            continue
+                        else:
+                            no_access.append(
+                                '.'.join(imd.name.split('_')[1:])
+                            )
 
         if no_access:
             self.fail(
