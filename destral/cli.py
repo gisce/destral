@@ -102,9 +102,11 @@ def destral(modules, tests, export_translations=False, enable_coverage=None, rep
         and 'abenergia' not in m
         and '_ab' not in m
         and 'enova' not in m
+        and 'edm' not in m
         and 'albatera' not in m
         and 'catral' not in m
         and 'agri' not in m
+        and 'giscegas' not in m
     ]
     print modules_to_test
     results = []
