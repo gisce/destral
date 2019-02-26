@@ -79,7 +79,7 @@ def destral(modules, tests, export_translations=False, enable_coverage=None, rep
             ))
         else:
             paths = subprocess.check_output([
-                "git", "diff", "--name-only", "HEAD~1..v2.93.0"
+                "git", "diff", "--name-only", "HEAD~1..v2.94.2"
             ])
             paths = [x for x in paths.split('\n') if x]
         modules_to_test = []
