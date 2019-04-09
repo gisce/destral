@@ -24,13 +24,15 @@ logger = logging.getLogger('destral.cli')
     allow_extra_args=True))
 @click.option('--modules', '-m', multiple=True)
 @click.option('--tests', '-t', multiple=True)
+@click.option('--all-tests', '-a', type=click.BOOL, default=False, is_flag=True)
 @click.option('--enable-coverage', type=click.BOOL, default=False, is_flag=True)
 @click.option('--report-coverage', type=click.BOOL, default=False, is_flag=True)
 @click.option('--report-junitxml', type=click.STRING, nargs=1, default=False)
 @click.option('--dropdb/--no-dropdb', default=True)
 @click.option('--requirements/--no-requirements', default=True)
-def destral(modules, tests, enable_coverage=None, report_coverage=None,
-            report_junitxml=None, dropdb=None, requirements=None):
+def destral(modules, tests, all_tests=None, enable_coverage=None,
+            report_coverage=None, report_junitxml=None, dropdb=None,
+            requirements=None):
     sys.argv = sys.argv[:1]
     service = OpenERPService()
     if report_junitxml:
@@ -132,6 +134,12 @@ def destral(modules, tests, enable_coverage=None, report_coverage=None,
             coverage.start()
             suite = get_unittest_suite(module, tests)
             suite.drop_database = dropdb
+            suite.config['all_tests'] = all_tests
+            if all_tests:
+                for m in get_dependencies(module, addons_path):
+                    for test in get_unittest_suite(m):
+                        if test not in suite:
+                            suite.addTest(test)
             result = run_unittest_suite(suite)
             coverage.stop()
             results.append(result.wasSuccessful())
