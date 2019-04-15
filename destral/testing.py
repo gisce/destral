@@ -110,10 +110,14 @@ class OOBaseTests(OOTestCase):
         imd_obj = self.openerp.pool.get('ir.model.data')
         view_obj = self.openerp.pool.get('ir.ui.view')
         with Transaction().start(self.database) as txn:
-            imd_ids = imd_obj.search(txn.cursor, txn.user, [
-                ('model', '=', 'ir.ui.view'),
-                ('module', '=', self.config['module'])
-            ])
+            search_params = [
+                ('model', '=', 'ir.ui.view')
+            ]
+            if not self.config.get('all_tests'):
+                search_params += [
+                    ('module', '=', self.config['module'])
+                ]
+            imd_ids = imd_obj.search(txn.cursor, txn.user, search_params)
             if imd_ids:
                 views = {}
                 for imd in imd_obj.read(txn.cursor, txn.user, imd_ids):
@@ -151,10 +155,14 @@ class OOBaseTests(OOTestCase):
         with Transaction().start(self.database) as txn:
             cursor = txn.cursor
             uid = txn.user
-            imd_ids = imd_obj.search(txn.cursor, txn.user, [
-                ('model', '=', 'ir.model'),
-                ('module', '=', self.config['module'])
-            ])
+            search_params = [
+                ('model', '=', 'ir.model')
+            ]
+            if not self.config.get('all_tests'):
+                search_params += [
+                    ('module', '=', self.config['module'])
+                ]
+            imd_ids = imd_obj.search(txn.cursor, txn.user, search_params)
             if imd_ids:
                 for imd in imd_obj.browse(txn.cursor, txn.user, imd_ids):
                     model_id = imd.res_id
