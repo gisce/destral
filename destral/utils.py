@@ -93,7 +93,7 @@ def get_dependencies(module, addons_path=None, deps=None):
     pj = os.path.join
     module_path = pj(addons_path, module)
     if not os.path.exists(module_path):
-        raise Exception('Module {} not found in {}'.format(
+        raise Exception('Module \'{}\' not found in {}'.format(
             module, addons_path
         ))
     terp_path = pj(module_path, '__terp__.py')
