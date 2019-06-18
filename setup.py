@@ -12,6 +12,7 @@ setup(
         'click',
         'mamba>=0.9.3',
         'coverage',
+        'pylint',
         'python-dateutil',
         'babel>=2.4.0',
         'junit_xml',
