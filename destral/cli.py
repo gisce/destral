@@ -8,6 +8,7 @@ import click
 from destral.utils import *
 from destral.testing import run_unittest_suite, get_unittest_suite
 from destral.testing import run_spec_suite, get_spec_suite
+from destral.linter import run_linter
 from destral.openerp import OpenERPService
 from destral.patch import RestorePatchedRegisterAll
 from destral.cover import OOCoverage
@@ -30,9 +31,11 @@ logger = logging.getLogger('destral.cli')
 @click.option('--report-junitxml', type=click.STRING, nargs=1, default=False)
 @click.option('--dropdb/--no-dropdb', default=True)
 @click.option('--requirements/--no-requirements', default=True)
+@click.option('--enable-lint', type=click.BOOL, default=False, is_flag=True)
 def destral(modules, tests, all_tests=None, enable_coverage=None,
             report_coverage=None, report_junitxml=None, dropdb=None,
-            requirements=None):
+            requirements=None, **kwargs):
+    enable_lint = kwargs.pop('enable_lint')
     sys.argv = sys.argv[:1]
     service = OpenERPService()
     if report_junitxml:
@@ -157,6 +160,11 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
         coverage.report()
     if enable_coverage:
         coverage.save()
+
+    if enable_lint:
+        modules_path = ['{}/{}'.format(addons_path, m) for m in modules_to_test]
+        if modules_path:
+            run_linter(modules_path)
 
     if not all(results):
         sys.exit(1)
