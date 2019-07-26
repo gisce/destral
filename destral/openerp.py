@@ -3,6 +3,7 @@ import time
 
 from osconf import config_from_environment
 from destral.utils import update_config
+import psycopg2
 
 
 logger = logging.getLogger('destral.openerp')
@@ -41,16 +42,23 @@ class OpenERPService(object):
         self.db = None
         self.pool = None
         if 'db_name' in config:
-            self.db_name = config['db_name']
+            try:
+                self.db_name = config['db_name']
+            except psycopg2.OperationalError as e:
+                logger.info(
+                    "Error opening named database '%s', creating it",
+                    config['db_name'])
+                self.db_name = self.create_database(False, db_name=config['db_name'])
         # Stop the cron
         netsvc.Agent.quit()
 
-    def create_database(self, template=True):
+    def create_database(self, template=True, db_name=None):
         """Creates a new database.
 
         :param template: use a template (name must be `base`) (default True)
         """
-        db_name = 'test_' + str(int(time.time()))
+        if db_name is None:
+            db_name = 'test_' + str(int(time.time()))
         import sql_db
         conn = sql_db.db_connect('postgres')
         cursor = conn.cursor()
@@ -78,6 +86,13 @@ class OpenERPService(object):
         try:
             logger.info('Droping database %s', self.db_name)
             cursor.autocommit(True)
+            logger.info('Disconnect all sessions from database %s', self.db_name)
+            cursor.execute(
+                "SELECT pg_terminate_backend(pg_stat_activity.pid) "
+                " FROM pg_stat_activity "
+                " WHERE pg_stat_activity.datname = '{}'"
+                " AND pid <> pg_backend_pid() ".format(self.db_name)
+            )
             cursor.execute('DROP DATABASE ' + self.db_name)
         finally:
             cursor.close()
@@ -107,29 +122,36 @@ class OpenERPService(object):
         from destral.transaction import Transaction
         module_obj = self.pool.get('ir.module.module')
         with Transaction().start(self.config['db_name']) as txn:
-            module_obj.update_list(txn.cursor, txn.user)
-            module_ids = module_obj.search(
-                txn.cursor, DEFAULT_USER,
-                [('name', '=', module)],
-            )
-            assert module_ids, "Module %s not found" % module
-            module_obj.button_install(txn.cursor, DEFAULT_USER, module_ids)
-            pool = pooler.get_pool(txn.cursor.dbname)
-            mod_obj = pool.get('ir.module.module')
-            ids = mod_obj.search(txn.cursor, txn.user, [
-                ('state', 'in', ['to upgrade', 'to remove', 'to install'])
+            cursor = txn.cursor
+            uid = txn.user
+            module_ids = module_obj.search(cursor, uid, [
+                ('name', '=', module),
+                ('state', '=', 'installed')
             ])
-            unmet_packages = []
-            mod_dep_obj = pool.get('ir.module.module.dependency')
-            for mod in mod_obj.browse(txn.cursor, txn.user, ids):
-                deps = mod_dep_obj.search(txn.cursor, txn.user, [
-                    ('module_id', '=', mod.id)
+            if not module_ids:
+                module_obj.update_list(cursor, uid)
+                module_ids = module_obj.search(
+                    txn.cursor, DEFAULT_USER,
+                    [('name', '=', module)],
+                )
+                assert module_ids, "Module %s not found" % module
+                module_obj.button_install(cursor, uid, module_ids)
+                pool = pooler.get_pool(cursor.dbname)
+                mod_obj = pool.get('ir.module.module')
+                ids = mod_obj.search(cursor, uid, [
+                    ('state', 'in', ['to upgrade', 'to remove', 'to install'])
                 ])
-                for dep_mod in mod_dep_obj.browse(txn.cursor, txn.user, deps):
-                    if dep_mod.state in ('unknown', 'uninstalled'):
-                        unmet_packages.append(dep_mod.name)
-            mod_obj.download(txn.cursor, txn.user, ids)
-            txn.cursor.commit()
+                unmet_packages = []
+                mod_dep_obj = pool.get('ir.module.module.dependency')
+                for mod in mod_obj.browse(cursor, uid, ids):
+                    deps = mod_dep_obj.search(cursor, uid, [
+                        ('module_id', '=', mod.id)
+                    ])
+                    for dep_mod in mod_dep_obj.browse(cursor, uid, deps):
+                        if dep_mod.state in ('unknown', 'uninstalled'):
+                            unmet_packages.append(dep_mod.name)
+                mod_obj.download(cursor, uid, ids)
+                cursor.commit()
         self.db, self.pool = pooler.restart_pool(
             self.config['db_name'], update_module=True
         )

@@ -9,6 +9,7 @@ Contents:
    :maxdepth: 2
 
    README.rst
+   how-to.rst
    api.rst
 
 

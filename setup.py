@@ -3,17 +3,20 @@ from setuptools import setup, find_packages
 
 setup(
     name='destral',
-    version='0.23.0',
+    version='1.6.0',
     packages=find_packages(),
     url='https://github.com/gisce/destral',
     install_requires=[
         'osconf',
         'expects',
         'click',
-        'mamba',
+        'mamba>=0.9.3',
         'coverage',
+        'pylint',
         'python-dateutil',
-        'babel>=2.4.0'
+        'babel>=2.4.0',
+        'junit_xml',
+        'psycopg2',
     ],
     license='GNU GPLv3',
     author='GISCE-TI, S.L.',

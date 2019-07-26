@@ -3,11 +3,13 @@ import logging
 import os
 import unittest
 
+from destral.junitxml_testing import JUnitXMLResult, LoggerStream
+from destral.junitxml_testing import JUnitXMLApplicationFactory
+from destral.junitxml_testing import JUnitXMLMambaFormatter
 from destral.openerp import OpenERPService
 from destral.transaction import Transaction
 from destral.utils import module_exists
 from osconf import config_from_environment
-from mamba import application_factory
 
 
 logger = logging.getLogger('destral.testing')
@@ -88,6 +90,17 @@ class OOTestCase(unittest.TestCase):
         return self.openerp.db_name
 
 
+class OOTestCaseWithCursor(OOTestCase):
+
+    def setUp(self):
+        self.txn = Transaction().start(self.database)
+        self.cursor = self.txn.cursor
+        self.uid = self.txn.user
+
+    def tearDown(self):
+        self.txn.stop()
+
+
 class OOBaseTests(OOTestCase):
 
     def test_all_views(self):
@@ -97,10 +110,14 @@ class OOBaseTests(OOTestCase):
         imd_obj = self.openerp.pool.get('ir.model.data')
         view_obj = self.openerp.pool.get('ir.ui.view')
         with Transaction().start(self.database) as txn:
-            imd_ids = imd_obj.search(txn.cursor, txn.user, [
-                ('model', '=', 'ir.ui.view'),
-                ('module', '=', self.config['module'])
-            ])
+            search_params = [
+                ('model', '=', 'ir.ui.view')
+            ]
+            if not self.config.get('all_tests'):
+                search_params += [
+                    ('module', '=', self.config['module'])
+                ]
+            imd_ids = imd_obj.search(txn.cursor, txn.user, search_params)
             if imd_ids:
                 views = {}
                 for imd in imd_obj.read(txn.cursor, txn.user, imd_ids):
@@ -138,10 +155,14 @@ class OOBaseTests(OOTestCase):
         with Transaction().start(self.database) as txn:
             cursor = txn.cursor
             uid = txn.user
-            imd_ids = imd_obj.search(txn.cursor, txn.user, [
-                ('model', '=', 'ir.model'),
-                ('module', '=', self.config['module'])
-            ])
+            search_params = [
+                ('model', '=', 'ir.model')
+            ]
+            if not self.config.get('all_tests'):
+                search_params += [
+                    ('module', '=', self.config['module'])
+                ]
+            imd_ids = imd_obj.search(txn.cursor, txn.user, search_params)
             if imd_ids:
                 for imd in imd_obj.browse(txn.cursor, txn.user, imd_ids):
                     model_id = imd.res_id
@@ -310,7 +331,16 @@ def run_unittest_suite(suite):
     """Run test suite
     """
     logger.info('Running test suit: {0}'.format(suite))
-    return unittest.TextTestRunner(verbosity=2).run(suite)
+    confs = config_from_environment(
+        'DESTRAL', ['verbose', 'junitxml'],
+        verbose=2, junitxml=False
+    )
+    verbose = confs.get('verbose', 2)
+    junitxml = confs.get('junitxml', False)
+    result = JUnitXMLResult if junitxml else unittest.TextTestResult
+    return unittest.TextTestRunner(
+        verbosity=verbose, resultclass=result, stream=LoggerStream
+    ).run(suite)
 
 
 def get_spec_suite(module):
@@ -320,22 +350,30 @@ def get_spec_suite(module):
     :return: suite
     """
     spec_dir = os.path.join(module, 'spec')
-    if os.path.exists(spec_dir):
+    specs_dir = os.path.join(module, 'specs')
+    junitxml = config_from_environment(
+        'DESTRAL', ['verbose', 'junitxml'],
+        verbose=2, junitxml=False
+    ).get('junitxml', False)
+    if os.path.exists(spec_dir) or os.path.exists(specs_dir):
         # Create a fake arguments object
         arguments = type('Arguments', (object, ), {})
-        arguments.specs = [spec_dir]
+        arguments.specs = [spec_dir, specs_dir]
         arguments.slow = 0.075
         arguments.enable_coverage = False
-        arguments.format = 'progress'
+        arguments.format = 'junitxml' if junitxml else 'progress'
         arguments.no_color = True
         arguments.watch = False
         arguments.coverage_file = '.coverage'
         arguments.tags = None
-        factory = application_factory.ApplicationFactory(arguments)
+        if 'erp/server/bin' in module:
+            module = 'root_path'
+        factory = JUnitXMLApplicationFactory(
+            arguments, modulename=module, junitxml_file=junitxml)
         logger.info('Mamba application factory created for specs: {0}'.format(
             spec_dir
         ))
-        return factory.create_runner()
+        return factory.runner()
     return None
 
 
