@@ -107,8 +107,9 @@ def get_dependencies(module, addons_path=None, deps=None):
         terp = literal_eval(terp_file.read())
 
     for dep in terp['depends']:
-        deps.append(dep)
-        deps += get_dependencies(dep, addons_path, deps)
+        if dep not in deps:
+            deps.append(dep)
+            deps += get_dependencies(dep, addons_path, deps)
 
     return list(set(deps))
 
