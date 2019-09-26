@@ -9,6 +9,7 @@ setup(
     install_requires=[
         'osconf',
         'expects',
+        'six',
         'click',
         'mamba>=0.9.3',
         'coverage',
