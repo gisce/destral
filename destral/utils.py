@@ -7,6 +7,7 @@ import sys
 import subprocess
 import tempfile
 import shutil
+import six
 
 __all__ = [
     'update_config',
@@ -22,7 +23,7 @@ __all__ = [
 def update_config(config, **kwargs):
     """Updates config dictionary from keyword arguments.
     """
-    for key, value in kwargs.iteritems():
+    for key, value in six.iteritems(kwargs):
         config[key] = value
     return config
 
