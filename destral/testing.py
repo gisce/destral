@@ -187,7 +187,7 @@ class OOBaseTests(OOTestCase):
 
         from os.path import join, isdir
         from tools import trans_export
-        from cStringIO import StringIO
+        from six.moves import StringIO
         from utils import compare_pofiles, TempDir
 
         if not self.config['testing_langs']:
