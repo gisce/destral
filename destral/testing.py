@@ -46,6 +46,12 @@ class OOTestSuite(unittest.TestSuite):
                     self.config['use_template']
                 )
             else:
+                # In order to install a module, we need to ensure that the
+                # db and the pool attributes of the openerp object are set.
+                if self.openerp.db is None:
+                    self.openerp.db = self.openerp.pooler.get_db(self.openerp.db_name)
+                if self.openerp.pool is None:
+                    self.openerp.pool = self.openerp.pooler.get_pool(self.openerp.db_name)
                 self.drop_database = False
             result.db_name = self.openerp.db_name
             self.openerp.install_module(self.config['module'])
