@@ -79,7 +79,7 @@ class OOTestLoader(unittest.TestLoader):
     def check_suite(suite):
         if sys.version_info >= (3, 6, 0):
             from unittest.loader import _FailedTest
-            if isinstance(suite._tests[0], _FailedTest):
+            if suite._tests and isinstance(suite._tests[0], _FailedTest):
                 raise AttributeError
         return suite
 
