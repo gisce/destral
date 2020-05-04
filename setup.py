@@ -11,7 +11,7 @@ setup(
         'expects',
         'six',
         'click',
-        'mamba>=0.9.3',
+        'mamba<0.11.0',
         'coverage',
         'pylint',
         'python-dateutil',
