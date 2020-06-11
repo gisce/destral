@@ -139,23 +139,36 @@ class OOBaseTests(OOTestCase):
                                           view.type)
                     if view.inherit_id:
                         while view.inherit_id:
+                            try:
+                                # print view.read([])
+                                # inh = imd_obj.read(
+                                #     txn.cursor, txn.user, view.id
+                                # )
+
+                                model.fields_view_get(
+                                    txn.cursor, txn.user, view.id, view.type
+                                )
+                            except IndexError as ie:
+                                err_mn = '{}.{}'.format(view.origin_module.name, view.name)
+                                raise Exception(
+                                    'Inherit View (xml id: %s) references model %s '
+                                    'which does '
+                                    'not exist' % (
+                                        err_mn, view.model
+                                    )
+                                )
+                            logger.info(
+                                'Testing inherit view %s (id: %s)',
+                                view.name, view.id
+                            )
                             view = view.inherit_id
-                            if not view.inherit_id:
-                                model.fields_view_get(
-                                    txn.cursor, txn.user, view.id, view.type
-                                )
-                                logger.info(
-                                    'Testing main view %s (id: %s)',
-                                    view.name, view.id
-                                )
-                            else:
-                                model.fields_view_get(
-                                    txn.cursor, txn.user, view.id, view.type
-                                )
-                                logger.info(
-                                    'Testing inherit view %s (id: %s)',
-                                    view.name, view.id
-                                )
+                        model.fields_view_get(
+                            txn.cursor, txn.user, view.id, view.type
+                        )
+                        logger.info(
+                            'Testing main view %s (id: %s)',
+                            view.name, view.id
+                        )
 
     def test_access_rules(self):
         """Test access rules for all the models created in the module
