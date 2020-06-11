@@ -140,10 +140,22 @@ class OOBaseTests(OOTestCase):
                     if view.inherit_id:
                         while view.inherit_id:
                             view = view.inherit_id
-                        model.fields_view_get(txn.cursor, txn.user, view.id,
-                                              view.type)
-                        logger.info('Testing main view %s (id: %s)',
-                                    view.name, view.id)
+                            if not view.inherit_id:
+                                model.fields_view_get(
+                                    txn.cursor, txn.user, view.id, view.type
+                                )
+                                logger.info(
+                                    'Testing main view %s (id: %s)',
+                                    view.name, view.id
+                                )
+                            else:
+                                model.fields_view_get(
+                                    txn.cursor, txn.user, view.id, view.type
+                                )
+                                logger.info(
+                                    'Testing inherit view %s (id: %s)',
+                                    view.name, view.id
+                                )
 
     def test_access_rules(self):
         """Test access rules for all the models created in the module
