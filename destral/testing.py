@@ -140,20 +140,11 @@ class OOBaseTests(OOTestCase):
                     if view.inherit_id:
                         while view.inherit_id:
                             try:
-                                print view.read([])
                                 model.fields_view_get(
                                     txn.cursor, txn.user, view.id, view.type
                                 )
-                            except IndexError as ie:
-                                err_mn = '{}.{}'.format(view.origin_module.name, view.name)
-                                raise Exception(
-                                    'Inherit View (xml id: %s) '
-                                    'references model %s '
-                                    'has non-existent field '
-                                    'in model %s' % (
-                                        err_mn, view.model, view.model
-                                    )
-                                )
+                            except ReferenceError as r_err:
+                                raise r_err
                             logger.info(
                                 'Testing inherit view %s (id: %s)',
                                 view.name, view.id
