@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 import logging
-from six.moves import urllib as urllib2
+from six.moves.urllib import request as urllib2
 
 import click
 from destral.utils import *

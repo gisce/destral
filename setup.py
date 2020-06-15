@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='destral',
-    version='1.6.1',
+    version='1.7.3',
     packages=find_packages(),
     url='https://github.com/gisce/destral',
     install_requires=[
@@ -11,7 +11,7 @@ setup(
         'expects',
         'six',
         'click',
-        'mamba>=0.9.3',
+        'mamba<0.11.0',
         'coverage',
         'pylint',
         'python-dateutil',
