@@ -68,7 +68,7 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
                 }
             )
             f = urllib2.urlopen(req)
-            paths = find_files(f.read())
+            paths = find_files(f.read().decode('utf-8'))
             logger.info('Files from Pull Request: {0}: {1}'.format(
                 ci_pull_request, ', '.join(paths)
             ))
