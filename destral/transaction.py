@@ -1,4 +1,5 @@
 from threading import local
+import six
 
 
 from destral.openerp import OpenERPService
@@ -19,10 +20,10 @@ class Singleton(type):
         return mcs.instance
 
 
+@six.add_metaclass(Singleton)
 class Transaction(local):
     """Transaction object
     """
-    __metaclass__ = Singleton
 
     database = None
     service = None

@@ -7,6 +7,7 @@ setup(
     packages=find_packages(),
     url='https://github.com/gisce/destral',
     install_requires=[
+        'requests',
         'osconf',
         'expects',
         'six',

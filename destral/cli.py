@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 import logging
-from six.moves.urllib import request as urllib2
+import requests
 
 import click
 from destral.utils import *
@@ -60,15 +60,14 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
                 repo=repository,
                 pr_number=ci_pull_request
             )
-            req = urllib2.Request(
+            req = requests.get(
                 url,
                 headers={
                     'Authorization': 'token {0}'.format(token),
                     'Accept': 'application/vnd.github.patch'
                 }
             )
-            f = urllib2.urlopen(req)
-            paths = find_files(f.read())
+            paths = find_files(req.text)
             logger.info('Files from Pull Request: {0}: {1}'.format(
                 ci_pull_request, ', '.join(paths)
             ))
