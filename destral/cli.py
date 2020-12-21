@@ -74,7 +74,7 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
         else:
             paths = subprocess.check_output([
                 "git", "diff", "--name-only", "HEAD~1..HEAD"
-            ])
+            ]).decode('utf-8')
             paths = [x for x in paths.split('\n') if x]
             logger.info('Files from last commit: {}'.format(
                 ', '.join(paths)
