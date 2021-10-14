@@ -29,6 +29,7 @@ logger = logging.getLogger('destral.cli')
 @click.option('--enable-coverage', type=click.BOOL, default=False, is_flag=True)
 @click.option('--report-coverage', type=click.BOOL, default=False, is_flag=True)
 @click.option('--report-junitxml', type=click.STRING, nargs=1, default=False)
+@click.option('--database', type=click.STRING, nargs=1, default=None)
 @click.option('--dropdb/--no-dropdb', default=True)
 @click.option('--requirements/--no-requirements', default=True)
 @click.option('--enable-lint', type=click.BOOL, default=False, is_flag=True)
@@ -36,6 +37,9 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
             report_coverage=None, report_junitxml=None, dropdb=None,
             requirements=None, **kwargs):
     enable_lint = kwargs.pop('enable_lint')
+    database = kwargs.pop('database')
+    if database:
+        os.environ['OPENERP_DB_NAME'] = database
     sys.argv = sys.argv[:1]
     service = OpenERPService()
     if report_junitxml:
