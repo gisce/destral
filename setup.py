@@ -14,6 +14,7 @@ setup(
         'click',
         'mamba<0.11.0',
         'coverage',
+        'lazy-object-proxy<1.7.0',
         'pylint',
         'python-dateutil',
         'babel>=2.4.0',
