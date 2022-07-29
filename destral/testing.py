@@ -148,16 +148,17 @@ class OOBaseTests(OOTestCase):
                             'View (xml id: %s) references model %s which does '
                             'not exist' % (view_xml_name, view.model)
                         )
-                    logger.info('Testing view %s (id: %s)', view.name, view.id)
+                    logger.info('Testing view %s (id: %s) v%s', view.name, view.id, view.version)
                     model.fields_view_get(txn.cursor, txn.user, view.id,
-                                          view.type)
+                                          view.type, version=view.version)
                     if view.inherit_id:
+                        version = view.version
                         while view.inherit_id:
                             view = view.inherit_id
                         model.fields_view_get(txn.cursor, txn.user, view.id,
-                                              view.type)
-                        logger.info('Testing main view %s (id: %s)',
-                                    view.name, view.id)
+                                              view.type, version=version)
+                        logger.info('Testing main view %s (id: %s) v%s',
+                                    view.name, view.id, version)
 
     def test_access_rules(self):
         """Test access rules for all the models created in the module
