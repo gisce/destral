@@ -173,3 +173,10 @@ class OpenERPService(object):
                 logger.info(
                     'User admin enabled with password: %s on %s',
                     password, txn.cursor.dbname)
+
+    def shutdown(self):
+        try:
+            from signals import SHUTDOWN_REQUEST
+            SHUTDOWN_REQUEST.send(None)
+        except ImportError:
+            pass

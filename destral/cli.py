@@ -169,8 +169,11 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
         if modules_path:
             run_linter(modules_path)
 
+    return_code = 0
     if not all(results):
-        sys.exit(1)
+        return_code = 1
+    service.shutdown()
+    sys.exit(return_code)
 
 
 if __name__ == '__main__':
