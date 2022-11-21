@@ -174,9 +174,9 @@ class OpenERPService(object):
                     'User admin enabled with password: %s on %s',
                     password, txn.cursor.dbname)
 
-    def shutdown(self):
+    def shutdown(self, return_code):
         try:
             from signals import SHUTDOWN_REQUEST
-            SHUTDOWN_REQUEST.send(None)
+            SHUTDOWN_REQUEST.send(exit_code=return_code)
         except ImportError:
             pass

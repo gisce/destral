@@ -172,7 +172,7 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
     return_code = 0
     if not all(results):
         return_code = 1
-    service.shutdown()
+    service.shutdown(return_code)
     sys.exit(return_code)
 
 
