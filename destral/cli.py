@@ -172,7 +172,15 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
     return_code = 0
     if not all(results):
         return_code = 1
-    service.shutdown()
+    try:
+        from signals import SHUTDOWN_REQUEST
+        SHUTDOWN_REQUEST.send(exit_code=return_code)
+    except TypeError:
+        # Backwards compatible
+        logger.warning('Old SHUTDOWN signal API withoud return_code')
+        SHUTDOWN_REQUEST.send(None)
+    except ImportError:
+        pass
     sys.exit(return_code)
 
 
