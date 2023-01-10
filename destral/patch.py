@@ -57,7 +57,7 @@ class PatchedConnection(object):
     def __getattr__(self, item):
         return getattr(self._connection, item)
 
-    def cursor(self, serialized=False):
+    def cursor(self, serialized=False, *args, **kwargs):
         """Wrapped function to return the same cursor
         """
         return self._cursor

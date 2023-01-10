@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 import logging
-import urllib2
+import requests
 
 import click
 from destral.utils import *
@@ -30,7 +30,8 @@ logger = logging.getLogger('destral.cli')
     '--export-translations', type=click.BOOL, default=False, is_flag=True)
 @click.option('--enable-coverage', type=click.BOOL, default=False, is_flag=True)
 @click.option('--report-coverage', type=click.BOOL, default=False, is_flag=True)
-@click.option('--report-junitxml', type=click.STRING, nargs=1, default=False)
+@click.option('--report-junitxml', type=click.STRING, nargs=1, default="")
+@click.option('--database', type=click.STRING, nargs=1, default=None)
 @click.option('--dropdb/--no-dropdb', default=True)
 @click.option('--requirements/--no-requirements', default=True)
 @click.option('--enable-lint', type=click.BOOL, default=False, is_flag=True)
@@ -38,6 +39,9 @@ def destral(modules, tests, export_translations=False, all_tests=None, enable_co
             report_coverage=None, report_junitxml=None, dropdb=None,
             requirements=None, **kwargs):
     enable_lint = kwargs.pop('enable_lint')
+    database = kwargs.pop('database')
+    if database:
+        os.environ['OPENERP_DB_NAME'] = database
     sys.argv = sys.argv[:1]
     if not export_translations:
         export_translations = False
@@ -74,22 +78,21 @@ def destral(modules, tests, export_translations=False, all_tests=None, enable_co
                 repo=repository,
                 pr_number=ci_pull_request
             )
-            req = urllib2.Request(
+            req = requests.get(
                 url,
                 headers={
                     'Authorization': 'token {0}'.format(token),
                     'Accept': 'application/vnd.github.patch'
                 }
             )
-            f = urllib2.urlopen(req)
-            paths = find_files(f.read())
+            paths = find_files(req.text)
             logger.info('Files from Pull Request: {0}: {1}'.format(
                 ci_pull_request, ', '.join(paths)
             ))
         else:
             paths = subprocess.check_output([
                 "git", "diff", "--name-only", "HEAD~1..HEAD"
-            ])
+            ]).decode('utf-8')
             paths = [x for x in paths.split('\n') if x]
             logger.info('Files from last commit: {}'.format(
                 ', '.join(paths)
@@ -180,8 +183,12 @@ def destral(modules, tests, export_translations=False, all_tests=None, enable_co
         if modules_path:
             run_linter(modules_path)
 
+    return_code = 0
     if not all(results):
-        sys.exit(1)
+        return_code = 1
+
+    service.shutdown(return_code)
+    sys.exit(return_code)
 
 
 if __name__ == '__main__':

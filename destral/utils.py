@@ -7,6 +7,7 @@ import sys
 import subprocess
 import tempfile
 import shutil
+import six
 
 __all__ = [
     'update_config',
@@ -22,7 +23,7 @@ __all__ = [
 def update_config(config, **kwargs):
     """Updates config dictionary from keyword arguments.
     """
-    for key, value in kwargs.iteritems():
+    for key, value in six.iteritems(kwargs):
         config[key] = value
     return config
 
@@ -107,8 +108,9 @@ def get_dependencies(module, addons_path=None, deps=None):
         terp = literal_eval(terp_file.read())
 
     for dep in terp['depends']:
-        deps.append(dep)
-        deps += get_dependencies(dep, addons_path, deps)
+        if dep not in deps:
+            deps.append(dep)
+            deps += get_dependencies(dep, addons_path, deps)
 
     return list(set(deps))
 
@@ -117,8 +119,8 @@ def find_files(diff):
     """Return all the files implicated in a diff
     """
     paths = []
-    for line in re.findall("--- a/.*|\+\+\+ b/.*", diff):
-        line = '/'.join(line.split('/')[1:])
+    for line in re.findall(u"--- a/.*|\+\+\+ b/.*", diff):
+        line = u'/'.join(line.split(u'/')[1:])
         paths.append(line)
     return list(set(paths))
 

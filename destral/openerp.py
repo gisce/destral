@@ -152,9 +152,13 @@ class OpenERPService(object):
                             unmet_packages.append(dep_mod.name)
                 mod_obj.download(cursor, uid, ids)
                 cursor.commit()
-        self.db, self.pool = pooler.restart_pool(
-            self.config['db_name'], update_module=True
-        )
+        try:
+            self.db, self.pool = pooler.restart_pool(
+                self.config['db_name'], update_module=True
+            )
+        except Exception:
+            self.shutdown(1)
+            raise
 
     def enable_admin(self, password='admin'):
         from destral.transaction import Transaction
@@ -173,3 +177,14 @@ class OpenERPService(object):
                 logger.info(
                     'User admin enabled with password: %s on %s',
                     password, txn.cursor.dbname)
+
+    def shutdown(self, return_code):
+        try:
+            from signals import SHUTDOWN_REQUEST
+            SHUTDOWN_REQUEST.send(exit_code=return_code)
+        except TypeError:
+            # Backwards compatible
+            logger.warning('Old SHUTDOWN signal API withoud return_code')
+            SHUTDOWN_REQUEST.send(None)
+        except ImportError:
+            pass
