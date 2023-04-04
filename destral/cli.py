@@ -38,6 +38,7 @@ logger = logging.getLogger('destral.cli')
 def destral(modules, tests, export_translations=False, all_tests=None, enable_coverage=None,
             report_coverage=None, report_junitxml=None, dropdb=None,
             requirements=None, **kwargs):
+    os.environ['OPENERP_DESTRAL_MODE'] = "1"
     enable_lint = kwargs.pop('enable_lint')
     database = kwargs.pop('database')
     if database:
