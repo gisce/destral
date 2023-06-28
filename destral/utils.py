@@ -119,13 +119,13 @@ def find_files(diff):
     """Return all the files implicated in a diff
     """
     paths = []
-    for line in re.findall("--- a/.*|\+\+\+ b/.*", diff):
-        line = '/'.join(line.split('/')[1:])
+    for line in re.findall(u"--- a/.*|\+\+\+ b/.*", diff):
+        line = u'/'.join(line.split(u'/')[1:])
         paths.append(line)
     return list(set(paths))
 
 
-def install_requirements(module, addons_path):
+def install_requirements(module, addons_path, constraints_file=''):
     """Install module requirements and its dependecies
     """
     pip = os.path.join(sys.prefix, 'bin', 'pip')
@@ -142,7 +142,10 @@ def install_requirements(module, addons_path):
             for req in requirements_files:
                 if os.path.exists(req):
                     logger.info('Requirements file %s found. Installing...', req)
-                    subprocess.check_call([pip, "install", "-r", req])
+                    if constraints_file:
+                        subprocess.check_call([pip, "install", "-c", constraints_file, "-r", req])
+                    else:
+                        subprocess.check_call([pip, "install", "-r", req])
 
 
 def coverage_modules_path(modules_to_test, addons_path):

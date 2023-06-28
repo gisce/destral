@@ -2,6 +2,7 @@ import importlib
 import logging
 import os
 import unittest
+import sys
 
 from destral.junitxml_testing import JUnitXMLResult, LoggerStream
 from destral.junitxml_testing import JUnitXMLApplicationFactory
@@ -74,6 +75,19 @@ class OOTestSuite(unittest.TestSuite):
 class OOTestLoader(unittest.TestLoader):
     suiteClass = OOTestSuite
 
+    @staticmethod
+    def check_suite(suite):
+        if sys.version_info >= (3, 6, 0):
+            from unittest.loader import _FailedTest
+            if suite._tests and isinstance(suite._tests[0], _FailedTest):
+                raise AttributeError
+        return suite
+
+    def loadTestsFromName(self, name, module=None):
+        suite = super(OOTestLoader, self).loadTestsFromName(name, module)
+        return self.check_suite(suite)
+
+
 
 class OOTestCase(unittest.TestCase):
     """Base class to inherit test cases from for OpenERP Testing Framework.
@@ -134,10 +148,11 @@ class OOBaseTests(OOTestCase):
                             'View (xml id: %s) references model %s which does '
                             'not exist' % (view_xml_name, view.model)
                         )
-                    logger.info('Testing view %s (id: %s)', view.name, view.id)
+                    logger.info('Testing view %s (id: %s) v%s', view.name, view.id, view.version)
                     model.fields_view_get(txn.cursor, txn.user, view.id,
-                                          view.type)
+                                          view.type, version=view.version)
                     if view.inherit_id:
+                        version = view.version
                         while view.inherit_id:
                             try:
                                 model.fields_view_get(
@@ -150,13 +165,11 @@ class OOBaseTests(OOTestCase):
                                 view.name, view.id
                             )
                             view = view.inherit_id
-                        model.fields_view_get(
-                            txn.cursor, txn.user, view.id, view.type
-                        )
-                        logger.info(
-                            'Testing main view %s (id: %s)',
-                            view.name, view.id
-                        )
+
+                        model.fields_view_get(txn.cursor, txn.user, view.id,
+                                              view.type, version=version)
+                        logger.info('Testing main view %s (id: %s) v%s',
+                                    view.name, view.id, version)
 
     def test_access_rules(self):
         """Test access rules for all the models created in the module
@@ -201,7 +214,7 @@ class OOBaseTests(OOTestCase):
         from os.path import join, isdir
         from tools import trans_export
         from six.moves import StringIO
-        from utils import compare_pofiles, TempDir
+        from destral.utils import compare_pofiles, TempDir
 
         if not self.config['testing_langs']:
             logger.warning(

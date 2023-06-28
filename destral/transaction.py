@@ -1,7 +1,9 @@
 from threading import local
+import six
 
 
 from destral.openerp import OpenERPService
+from signals import DB_CURSOR_EXECUTE
 
 
 class Singleton(type):
@@ -19,10 +21,10 @@ class Singleton(type):
         return mcs.instance
 
 
+@six.add_metaclass(Singleton)
 class Transaction(local):
     """Transaction object
     """
-    __metaclass__ = Singleton
 
     database = None
     service = None
@@ -46,13 +48,19 @@ class Transaction(local):
         self.pool = self.service.pool
         self.cursor = self.service.db.cursor()
         self.user = user
-        self.context = context if context is not None else self.get_context()
+        try:
+            receivers = DB_CURSOR_EXECUTE.receivers
+            DB_CURSOR_EXECUTE.receivers = {}
+            self.context = context if context is not None else self.get_context()
+        finally:
+            DB_CURSOR_EXECUTE.receivers = receivers
         return self
 
     def stop(self):
         """Stop the transaction.
         """
-        self.cursor.close()
+        if self.cursor is not None:
+            self.cursor.close()
         self.service = None
         self.cursor = None
         self.user = None
@@ -74,10 +82,16 @@ class Transaction(local):
     def __exit__(self, type, value, traceback):
         self.stop()
 
-    def _assert_stopped(self):
-        assert self.service is None
-        assert self.database is None
-        assert self.cursor is None
-        assert self.pool is None
-        assert self.user is None
-        assert self.context is None
+    def _assert_stopped(self, deep=False):
+        try:
+            assert self.service is None
+            assert self.database is None
+            assert self.cursor is None
+            assert self.pool is None
+            assert self.user is None
+            assert self.context is None
+        except AssertionError as ae:
+            if not deep:
+                self.stop()
+                return self._assert_stopped(True)
+            raise ae
