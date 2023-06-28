@@ -35,11 +35,13 @@ logger = logging.getLogger('destral.cli')
 @click.option('--dropdb/--no-dropdb', default=True)
 @click.option('--requirements/--no-requirements', default=True)
 @click.option('--enable-lint', type=click.BOOL, default=False, is_flag=True)
+@click.option('--constraints-file', type=click.STRING, nargs=1, default="")
 def destral(modules, tests, export_translations=False, all_tests=None, enable_coverage=None,
             report_coverage=None, report_junitxml=None, dropdb=None,
             requirements=None, **kwargs):
     os.environ['OPENERP_DESTRAL_MODE'] = "1"
     enable_lint = kwargs.pop('enable_lint')
+    constraints_file = kwargs.pop('constraints_file')
     database = kwargs.pop('database')
     if database:
         os.environ['OPENERP_DB_NAME'] = database
@@ -140,7 +142,7 @@ def destral(modules, tests, export_translations=False, all_tests=None, enable_co
     for module in modules_to_test:
         with RestorePatchedRegisterAll():
             if requirements:
-                install_requirements(module, addons_path)
+                install_requirements(module, addons_path, constraints_file=constraints_file)
             spec_suite = get_spec_suite(os.path.join(addons_path, module))
             if spec_suite:
                 logger.info('Spec testing module %s', module)
