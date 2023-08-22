@@ -181,6 +181,8 @@ class OOBaseTests(OOTestCase):
             if imd_ids:
                 for imd in imd_obj.browse(txn.cursor, txn.user, imd_ids):
                     model_id = imd.res_id
+                    if getattr(self.openerp.pool.get(imd.model), '_test_class', False):
+                        continue
                     access_ids = access_obj.search(cursor, uid, [
                         ('model_id.id', '=', model_id)
                     ])
