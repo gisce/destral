@@ -15,7 +15,7 @@ setup(
         'mamba<0.11.0',
         'coverage',
         'lazy-object-proxy<1.7.0',
-        'pylint',
+        'pylint<=2.17.7',
         'python-dateutil',
         'babel>=2.4.0',
         'junit_xml',
