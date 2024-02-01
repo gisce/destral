@@ -154,7 +154,18 @@ class OOBaseTests(OOTestCase):
                     if view.inherit_id:
                         version = view.version
                         while view.inherit_id:
+                            try:
+                                model.fields_view_get(
+                                    txn.cursor, txn.user, view.id, view.type
+                                )
+                            except ReferenceError as r_err:
+                                raise r_err
+                            logger.info(
+                                'Testing inherit view %s (id: %s)',
+                                view.name, view.id
+                            )
                             view = view.inherit_id
+
                         model.fields_view_get(txn.cursor, txn.user, view.id,
                                               view.type, version=version)
                         logger.info('Testing main view %s (id: %s) v%s',
