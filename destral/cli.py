@@ -141,7 +141,11 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
             logger.info('Unit testing module %s', module)
             os.environ['DESTRAL_MODULE'] = module
             coverage.start()
-            suite = get_unittest_suite(module, tests)
+            try:
+                suite = get_unittest_suite(module, tests)
+            except Exception as e:
+                logger.error('Suite not found: {}'.format(e))
+                service.shutdown(1)
             suite.drop_database = dropdb
             suite.config['all_tests'] = all_tests
             if all_tests:
