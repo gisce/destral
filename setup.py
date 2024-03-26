@@ -22,7 +22,7 @@ else:
     requirements.append('mamba>=0.11.0')
 setup(
     name='destral',
-    version='1.17.0',
+    version='1.18.0',
     packages=find_packages(),
     url='https://github.com/gisce/destral',
     install_requires=requirements,
