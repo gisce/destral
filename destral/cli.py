@@ -91,6 +91,8 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
             module = detect_module(path)
             if module and module not in modules_to_test:
                 modules_to_test.append(module)
+        if not modules_to_test:
+            modules_to_test = ['base']
     else:
         modules_to_test = modules[:]
 
