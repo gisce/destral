@@ -154,7 +154,18 @@ class OOBaseTests(OOTestCase):
                     if view.inherit_id:
                         version = view.version
                         while view.inherit_id:
+                            try:
+                                model.fields_view_get(
+                                    txn.cursor, txn.user, view.id, view.type
+                                )
+                            except ReferenceError as r_err:
+                                raise r_err
+                            logger.info(
+                                'Testing inherit view %s (id: %s)',
+                                view.name, view.id
+                            )
                             view = view.inherit_id
+
                         model.fields_view_get(txn.cursor, txn.user, view.id,
                                               view.type, version=version)
                         logger.info('Testing main view %s (id: %s) v%s',
@@ -164,6 +175,7 @@ class OOBaseTests(OOTestCase):
         """Test access rules for all the models created in the module
         """
         logger.info('Testing access rules for module %s', self.config['module'])
+        model_obj = self.openerp.pool.get('ir.model')
         imd_obj = self.openerp.pool.get('ir.model.data')
         access_obj = self.openerp.pool.get('ir.model.access')
         no_access = []
@@ -181,6 +193,9 @@ class OOBaseTests(OOTestCase):
             if imd_ids:
                 for imd in imd_obj.browse(txn.cursor, txn.user, imd_ids):
                     model_id = imd.res_id
+                    pool_model = model_obj.read(txn.cursor, txn.user, model_id, ['model'])['model']
+                    if getattr(self.openerp.pool.get(pool_model), '_test_class', False):
+                        continue
                     access_ids = access_obj.search(cursor, uid, [
                         ('model_id.id', '=', model_id)
                     ])

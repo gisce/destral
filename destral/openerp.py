@@ -29,6 +29,7 @@ class OpenERPService(object):
         :param \**kwargs: keyword arguments passed to the config
         """
         config = config_from_environment('OPENERP', [], **kwargs)
+        import service
         import netsvc
         import tools
         update_config(tools.config, **config)

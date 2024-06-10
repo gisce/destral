@@ -105,6 +105,8 @@ def destral(modules, tests, export_translations=False, all_tests=None, enable_co
             module = detect_module(path)
             if module and module not in modules_to_test:
                 modules_to_test.append(module)
+        if not modules_to_test:
+            modules_to_test = ['base']
     else:
         modules_to_test = modules[:]
 
@@ -155,7 +157,11 @@ def destral(modules, tests, export_translations=False, all_tests=None, enable_co
             logger.info('Unit testing module %s', module)
             os.environ['DESTRAL_MODULE'] = module
             coverage.start()
-            suite = get_unittest_suite(module, tests)
+            try:
+                suite = get_unittest_suite(module, tests)
+            except Exception as e:
+                logger.error('Suite not found: {}'.format(e))
+                service.shutdown(1)
             suite.drop_database = dropdb
             suite.config['all_tests'] = all_tests
             if all_tests:
