@@ -15,9 +15,7 @@ requirements = [
     'babel>=2.4.0',
     'junit_xml',
     'psycopg2',
-    'rq>=1.3.0',
-    'werkzeug',
-    'flask',
+    'mock',
 ]
 if sys.version_info.major < 3:
     requirements.append('mamba<0.11.0')
