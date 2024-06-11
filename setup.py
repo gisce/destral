@@ -16,7 +16,7 @@ requirements = [
     'junit_xml',
     'psycopg2',
     'mock',
-    'xlrd',
+    'xlrd==1.2.0',
 ]
 if sys.version_info.major < 3:
     requirements.append('mamba<0.11.0')
