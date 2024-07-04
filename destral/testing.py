@@ -154,7 +154,7 @@ class OOBaseTests(OOTestCase):
                             'not exist' % (view_xml_name, view.model)
                         )
                     logger.info('Testing view %s (id: %s) v%s', view.name, view.id, view.version)
-                    if TestingExceptions:
+                    if SkipViewValidation:
                         try:
                             model.fields_view_get(txn.cursor, txn.user, view.id, view.type, version=view.version)
                         except TestingExceptions.SkipViewValidation:
