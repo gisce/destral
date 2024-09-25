@@ -85,7 +85,7 @@ def destral(modules, tests, export_translations=False, all_tests=None, enable_co
                 url,
                 headers={
                     'Authorization': 'token {0}'.format(token),
-                    'Accept': 'application/vnd.github.patch'
+                    'Accept': 'application/vnd.github.diff'
                 }
             )
             paths = find_files(req.text)

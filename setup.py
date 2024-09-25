@@ -15,6 +15,8 @@ requirements = [
     'babel>=2.4.0',
     'junit_xml',
     'psycopg2',
+    'mock',
+    'xlrd==1.2.0',
 ]
 if sys.version_info.major < 3:
     requirements.append('mamba<0.11.0')
@@ -22,7 +24,7 @@ else:
     requirements.append('mamba>=0.11.0')
 setup(
     name='destral',
-    version='1.19.0',
+    version='1.20.1',
     packages=find_packages(),
     url='https://github.com/gisce/destral',
     install_requires=requirements,

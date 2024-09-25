@@ -47,6 +47,7 @@ class Transaction(local):
         self.service = OpenERPService(db_name=database_name)
         self.pool = self.service.pool
         self.cursor = self.service.db.cursor()
+        self.service.cursor_stack.push(self.cursor)
         self.user = user
         try:
             receivers = DB_CURSOR_EXECUTE.receivers
@@ -60,6 +61,7 @@ class Transaction(local):
         """Stop the transaction.
         """
         if self.cursor is not None:
+            self.service.cursor_stack.pop()
             self.cursor.close()
         self.service = None
         self.cursor = None

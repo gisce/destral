@@ -120,6 +120,11 @@ class OOBaseTests(OOTestCase):
     def test_all_views(self):
         """Tests all views defined in the module.
         """
+        try:
+            from tools import TestingExceptions
+            SkipViewValidation = TestingExceptions.SkipViewValidation
+        except:
+            SkipViewValidation = False
         logger.info('Testing views for module %s', self.config['module'])
         imd_obj = self.openerp.pool.get('ir.model.data')
         view_obj = self.openerp.pool.get('ir.ui.view')
@@ -149,8 +154,13 @@ class OOBaseTests(OOTestCase):
                             'not exist' % (view_xml_name, view.model)
                         )
                     logger.info('Testing view %s (id: %s) v%s', view.name, view.id, view.version)
-                    model.fields_view_get(txn.cursor, txn.user, view.id,
-                                          view.type, version=view.version)
+                    if SkipViewValidation:
+                        try:
+                            model.fields_view_get(txn.cursor, txn.user, view.id, view.type, version=view.version)
+                        except TestingExceptions.SkipViewValidation:
+                            continue
+                    else:
+                        model.fields_view_get(txn.cursor, txn.user, view.id, view.type, version=view.version)
                     if view.inherit_id:
                         version = view.version
                         while view.inherit_id:

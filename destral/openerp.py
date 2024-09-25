@@ -36,12 +36,14 @@ class OpenERPService(object):
         if hasattr(tools.config, 'parse'):
             tools.config.parse()
         from tools import config as default_config
+        from ctx import _cursor_context
         self.config = update_config(default_config, **config)
         import pooler
         import workflow
         self.pooler = pooler
         self.db = None
         self.pool = None
+        self.cursor_stack = _cursor_context
         if 'db_name' in config:
             try:
                 self.db_name = config['db_name']
