@@ -34,12 +34,16 @@ logger = logging.getLogger('destral.cli')
 @click.option('--requirements/--no-requirements', default=True)
 @click.option('--enable-lint', type=click.BOOL, default=False, is_flag=True)
 @click.option('--constraints-file', type=click.STRING, nargs=1, default="")
+@click.option(
+    '--coverage-html-report', type=click.STRING, nargs=1, default="", help="Coverage HTML report path"
+)
 def destral(modules, tests, all_tests=None, enable_coverage=None,
             report_coverage=None, report_junitxml=None, dropdb=None,
             requirements=None, **kwargs):
     os.environ['OPENERP_DESTRAL_MODE'] = "1"
     enable_lint = kwargs.pop('enable_lint')
     constraints_file = kwargs.pop('constraints_file')
+    coverage_html_report = kwargs.pop('coverage_html_report')
     database = kwargs.pop('database')
     if database:
         os.environ['OPENERP_DB_NAME'] = database
@@ -172,6 +176,8 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
         coverage.report()
     if enable_coverage:
         coverage.save()
+    if coverage.enabled and coverage_html_report:
+        coverage.html_report(directory=coverage_html_report)
 
     if enable_lint:
         modules_path = ['{}/{}'.format(addons_path, m) for m in modules_to_test]
