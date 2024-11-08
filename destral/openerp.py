@@ -115,7 +115,7 @@ class OpenERPService(object):
             self.db = None
             self.pool = None
 
-    def install_module(self, module):
+    def install_module(self, module, with_test_depends=False):
         """Installs a module
 
         :param module: Module to install
@@ -138,6 +138,20 @@ class OpenERPService(object):
                     [('name', '=', module)],
                 )
                 assert module_ids, "Module %s not found" % module
+                module_info = module_obj.get_module_info(module)
+                if with_test_depends and module_info.get('test_depends'):
+                    logger.info("Found extra dependencies for module %s" % module)
+                    extra_modules = module_info['test_depends']
+                    logger.info("Including extra dependencies:\n%s" % '\n'.join(extra_modules))
+                    extra_modules_ids = module_obj.search(
+                        txn.cursor, DEFAULT_USER,
+                        [('name', 'in', extra_modules)],
+                    )
+                    if len(extra_modules_ids) != len(extra_modules):
+                        logger.warning("Some extra dependencies were not found")
+
+                    module_ids.extend(extra_modules_ids)
+
                 module_obj.button_install(cursor, uid, module_ids)
                 pool = pooler.get_pool(cursor.dbname)
                 mod_obj = pool.get('ir.module.module')
