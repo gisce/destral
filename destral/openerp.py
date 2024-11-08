@@ -145,10 +145,10 @@ class OpenERPService(object):
                     logger.info("Including extra dependencies:\n%s" % '\n'.join(extra_modules))
                     extra_modules_ids = module_obj.search(
                         txn.cursor, DEFAULT_USER,
-                        [('name', 'in', extra_modules)],
+                        [('name', 'in', extra_modules), ('state', '!=', 'installed')],
                     )
                     if len(extra_modules_ids) != len(extra_modules):
-                        logger.warning("Some extra dependencies were not found")
+                        logger.warning("Some extra dependencies were not found or already installed")
 
                     module_ids.extend(extra_modules_ids)
 
