@@ -32,6 +32,7 @@ class Transaction(local):
     cursor = None
     user = None
     context = None
+    ws = None
 
     def __init__(self):
         pass
@@ -48,6 +49,9 @@ class Transaction(local):
         self.pool = self.service.pool
         self.cursor = self.service.db.cursor()
         self.service.cursor_stack.push(self.cursor)
+        from tools import WebServiceTracker
+        self.ws = WebServiceTracker(db=self.service.db)
+        self.service.ws_stack.push(self.ws)
         self.user = user
         try:
             receivers = DB_CURSOR_EXECUTE.receivers
@@ -63,6 +67,9 @@ class Transaction(local):
         if self.cursor is not None:
             self.service.cursor_stack.pop()
             self.cursor.close()
+        if self.ws is not None:
+            self.service.ws_stack.pop()
+            self.ws = None
         self.service = None
         self.cursor = None
         self.user = None
@@ -87,6 +94,7 @@ class Transaction(local):
     def _assert_stopped(self, deep=False):
         try:
             assert self.service is None
+            assert self.ws is None
             assert self.database is None
             assert self.cursor is None
             assert self.pool is None
