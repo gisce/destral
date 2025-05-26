@@ -104,7 +104,7 @@ class PatchNewCursors(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.unpatch()
-
+        return False
     def __call__(self, func):
         """Allow usage as a decorator"""
         def wrapper(*args, **kwargs):
