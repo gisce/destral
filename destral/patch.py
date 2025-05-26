@@ -1,4 +1,5 @@
 import logging
+from ctx import current_session, current_cursor
 
 
 logger = logging.getLogger(__name__)
@@ -88,11 +89,14 @@ class PatchNewCursors(object):
         logger.info('Patching creation of new cursors')
         self.orig = sql_db.db_connect
         sql_db.db_connect = PatchNewCursors.db_connect
+        self.orig_db = current_session.db
+        current_session.db = PatchedConnection(current_session.db, current_cursor)
 
     def unpatch(self):
         import sql_db
         logger.info('Unpatching creation of new cursors')
         sql_db.db_connect = self.orig
+        current_session.db = self.orig_db
 
     def __enter__(self):
         self.patch()
