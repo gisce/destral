@@ -11,6 +11,8 @@ from destral.openerp import OpenERPService
 from destral.transaction import Transaction
 from destral.utils import module_exists
 from osconf import config_from_environment
+from ctx import _ws_info
+from tools.service_utils import WebserviceBase
 
 
 logger = logging.getLogger('destral.testing')
@@ -110,9 +112,11 @@ class OOTestCaseWithCursor(OOTestCase):
         self.txn = Transaction().start(self.database)
         self.cursor = self.txn.cursor
         self.uid = self.txn.user
+        _ws_info.push(WebserviceBase(uid=self.uid))
 
     def tearDown(self):
         self.txn.stop()
+        _ws_info.pop()
 
 
 class OOBaseTests(OOTestCase):
