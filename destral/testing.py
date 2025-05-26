@@ -49,7 +49,7 @@ class OOTestSuite(unittest.TestSuite):
             else:
                 self.drop_database = False
             result.db_name = self.openerp.db_name
-            self.openerp.install_module(self.config['module'])
+            self.openerp.install_module(self.config['module'], with_test_depends=True)
         else:
             self.openerp.db_name = result.db_name
 
