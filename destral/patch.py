@@ -83,13 +83,30 @@ class PatchNewCursors(object):
         conn = sql_db.Connection(sql_db._Pool, db_name)
         return PatchedConnection(conn, cursor)
 
-    def __enter__(self):
+    def patch(self):
         import sql_db
         logger.info('Patching creation of new cursors')
         self.orig = sql_db.db_connect
         sql_db.db_connect = PatchNewCursors.db_connect
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def unpatch(self):
         import sql_db
         logger.info('Unpatching creation of new cursors')
         sql_db.db_connect = self.orig
+
+    def __enter__(self):
+        self.patch()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.unpatch()
+
+    def __call__(self, func):
+        """Allow usage as a decorator"""
+        def wrapper(*args, **kwargs):
+            self.patch()
+            try:
+                return func(*args, **kwargs)
+            finally:
+                self.unpatch()
+        return wrapper
