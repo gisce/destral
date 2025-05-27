@@ -1,4 +1,5 @@
 import logging
+import functools
 from ctx import current_session, current_cursor
 
 
