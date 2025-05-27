@@ -114,6 +114,7 @@ class PatchNewCursors(object):
         return False
     def __call__(self, func):
         """Allow usage as a decorator"""
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             self.patch()
             try:
