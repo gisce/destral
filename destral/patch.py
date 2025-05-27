@@ -93,6 +93,13 @@ class PatchNewCursors(object):
         current_session.db = PatchedConnection(current_session.db, current_cursor)
 
     def unpatch(self):
+        """
+        Restore the original database connection and cursor behavior.
+
+        This method undoes the changes made by the `patch` method by:
+        - Restoring the original `sql_db.db_connect` function.
+        - Reverting `current_session.db` to its original state.
+        """
         import sql_db
         logger.info('Unpatching creation of new cursors')
         sql_db.db_connect = self.orig
