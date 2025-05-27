@@ -86,6 +86,15 @@ class PatchNewCursors(object):
         return PatchedConnection(conn, cursor)
 
     def patch(self):
+        """
+        Patch the database connection to always return the same cursor.
+
+        This method replaces the `sql_db.db_connect` function with a custom
+        implementation that returns a `PatchedConnection`. It also updates
+        the current session's database connection to use the same patched
+        connection. This ensures that all new cursors created during the
+        session are consistent and tied to the same transaction.
+        """
         import sql_db
         logger.info('Patching creation of new cursors')
         self.orig = sql_db.db_connect
