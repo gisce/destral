@@ -93,7 +93,11 @@ class OOTestLoader(unittest.TestLoader):
 
 class OOTestCase(unittest.TestCase):
     """Base class to inherit test cases from for OpenERP Testing Framework.
+
+    :ivar openerp: OpenERPService instance for database operations
+    :type openerp: OpenERPService or None
     """
+    openerp = None
 
     require_demo_data = False
     """Require demo data to run the tests.
