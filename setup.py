@@ -17,7 +17,7 @@ requirements = [
     'psycopg2',
     'mock',
     'xlrd==1.2.0',
-    'typing==3.10.0.0',
+    'typing==3.10.0.0;python_version<"3.0"'
 ]
 if sys.version_info.major < 3:
     requirements.append('mamba<0.11.0')
