@@ -90,14 +90,20 @@ class OOTestLoader(unittest.TestLoader):
         return self.check_suite(suite)
 
 
-
 class OOTestCase(unittest.TestCase):
     """Base class to inherit test cases from for OpenERP Testing Framework.
-    """
 
-    require_demo_data = False
-    """Require demo data to run the tests.
+    :ivar openerp: OpenERPService instance for database operations
+    :type openerp: OpenERPService or None
     """
+    openerp = None
+
+    """Require demo data to run the tests?"""
+    require_demo_data = False
+
+    @classmethod
+    def setUpClass(cls):
+        cls.pool = cls.openerp.pool
 
     @property
     def database(self):
