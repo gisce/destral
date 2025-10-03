@@ -17,6 +17,7 @@ requirements = [
     'psycopg2',
     'mock',
     'xlrd==1.2.0',
+    'typing==3.10.0.0;python_version<"3.0"'
 ]
 if sys.version_info.major < 3:
     requirements.append('mamba<0.11.0')
@@ -24,7 +25,7 @@ else:
     requirements.append('mamba>=0.11.0')
 setup(
     name='destral',
-    version='1.23.0',
+    version='2.1.0',
     packages=find_packages(),
     url='https://github.com/gisce/destral',
     install_requires=requirements,

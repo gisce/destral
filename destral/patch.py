@@ -1,4 +1,6 @@
 import logging
+import functools
+from ctx import current_session, current_cursor
 
 
 logger = logging.getLogger(__name__)
@@ -83,13 +85,50 @@ class PatchNewCursors(object):
         conn = sql_db.Connection(sql_db._Pool, db_name)
         return PatchedConnection(conn, cursor)
 
-    def __enter__(self):
+    def patch(self):
+        """
+        Patch the database connection to always return the same cursor.
+
+        This method replaces the `sql_db.db_connect` function with a custom
+        implementation that returns a `PatchedConnection`. It also updates
+        the current session's database connection to use the same patched
+        connection. This ensures that all new cursors created during the
+        session are consistent and tied to the same transaction.
+        """
         import sql_db
         logger.info('Patching creation of new cursors')
         self.orig = sql_db.db_connect
         sql_db.db_connect = PatchNewCursors.db_connect
+        self.orig_db = current_session.db
+        current_session.db = PatchedConnection(current_session.db, current_cursor)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def unpatch(self):
+        """
+        Restore the original database connection and cursor behavior.
+
+        This method undoes the changes made by the `patch` method by:
+        - Restoring the original `sql_db.db_connect` function.
+        - Reverting `current_session.db` to its original state.
+        """
         import sql_db
         logger.info('Unpatching creation of new cursors')
         sql_db.db_connect = self.orig
+        current_session.db = self.orig_db
+
+    def __enter__(self):
+        self.patch()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.unpatch()
+        return False
+    def __call__(self, func):
+        """Allow usage as a decorator"""
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            self.patch()
+            try:
+                return func(*args, **kwargs)
+            finally:
+                self.unpatch()
+        return wrapper

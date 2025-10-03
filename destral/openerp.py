@@ -2,9 +2,13 @@ import logging
 import time
 
 from osconf import config_from_environment
+from typing import Optional
+
 from destral.utils import update_config
 import psycopg2
 
+from osv.osv import osv_pool
+from sql_db import Connection
 
 logger = logging.getLogger('destral.openerp')
 DEFAULT_USER = 1
@@ -41,8 +45,8 @@ class OpenERPService(object):
         import pooler
         import workflow
         self.pooler = pooler
-        self.db = None
-        self.pool = None
+        self.db = None  # type: Optional[Connection]
+        self.pool = None    # type: Optional[osv_pool]
         self.cursor_stack = _cursor_context
         self.ws_stack = _ws_info
         if 'db_name' in config:
