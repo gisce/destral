@@ -1,0 +1,106 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  tests-py311:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/erp/server/bin
+    steps:
+      - name: Checkout destral
+        uses: actions/checkout@v4
+
+      - name: Checkout ERP repository
+        uses: actions/checkout@v4
+        with:
+          repository: gisce/erp
+          token: ${{ secrets.RO_GH_ACTIONS_TOKEN }}
+          path: erp
+
+      - name: Checkout oorq repository
+        uses: actions/checkout@v4
+        with:
+          repository: gisce/oorq
+          token: ${{ secrets.RO_GH_ACTIONS_TOKEN }}
+          path: oorq
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install project dependencies
+        run: |
+          python -m pip install -e .
+          python -m pip install -r requirements-dev.txt
+          python -m pip install -r erp/requirements.txt
+          python -m pip install -r erp/server/bin/msgpackapi/requirements.txt
+          python -m pip install -r erp/server/bin/restapi/requirements.txt
+          python -m pip install -r erp/server/bin/addons/base/requirements.txt
+          python -m pip install -r oorq/requirements.txt
+
+      - name: Add user base scripts to PATH
+        run: echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+
+      - name: Run unit tests
+        run: python -m unittest discover tests
+
+      - name: Run specs
+        run: mamba spec
+
+  tests-py27:
+    runs-on: ubuntu-latest
+    container: python:2.7-slim
+    env:
+      PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/erp/server/bin
+    steps:
+      - name: Install system dependencies
+        run: |
+          apt-get update
+          apt-get install -y git build-essential python-dev libpq-dev
+          rm -rf /var/lib/apt/lists/*
+
+      - name: Checkout destral
+        uses: actions/checkout@v4
+
+      - name: Checkout ERP repository
+        uses: actions/checkout@v4
+        with:
+          repository: gisce/erp
+          token: ${{ secrets.RO_GH_ACTIONS_TOKEN }}
+          path: erp
+
+      - name: Checkout oorq repository
+        uses: actions/checkout@v4
+        with:
+          repository: gisce/oorq
+          token: ${{ secrets.RO_GH_ACTIONS_TOKEN }}
+          path: oorq
+
+      - name: Prepare pip tooling
+        run: python -m pip install --upgrade "pip<21" "setuptools<45" wheel
+
+      - name: Install project dependencies
+        run: |
+          python -m pip install -e .
+          python -m pip install -r requirements-dev.txt
+          python -m pip install -r erp/requirements.txt
+          python -m pip install -r erp/server/bin/msgpackapi/requirements.txt
+          python -m pip install -r erp/server/bin/restapi/requirements.txt
+          python -m pip install -r erp/server/bin/addons/base/requirements.txt
+          python -m pip install -r oorq/requirements.txt
+
+      - name: Run unit tests
+        run: python -m unittest discover tests
+
+      - name: Run specs
+        run: mamba spec
