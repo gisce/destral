@@ -20,14 +20,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: gisce/erp
-          token: ${{ secrets.RO_GH_ACTIONS_TOKEN }}
+          token: ${{ secrets.RO_GITHUB_ACTIONS_REPOS }}
           path: erp
 
       - name: Checkout oorq repository
         uses: actions/checkout@v4
         with:
           repository: gisce/oorq
-          token: ${{ secrets.RO_GH_ACTIONS_TOKEN }}
+          token: ${{ secrets.RO_GITHUB_ACTIONS_REPOS }}
           path: oorq
 
       - name: Set up Python
@@ -79,14 +79,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: gisce/erp
-          token: ${{ secrets.RO_GH_ACTIONS_TOKEN }}
+          token: ${{ secrets.RO_GITHUB_ACTIONS_REPOS }}
           path: erp
 
       - name: Checkout oorq repository
         uses: actions/checkout@v4
         with:
           repository: gisce/oorq
-          token: ${{ secrets.RO_GH_ACTIONS_TOKEN }}
+          token: ${{ secrets.RO_GITHUB_ACTIONS_REPOS }}
           path: oorq
 
       - name: Prepare pip tooling
