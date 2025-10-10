@@ -1,7 +1,4 @@
 # coding=utf-8
-from __future__ import absolute_import
-
-
 from destral.utils import find_files, compare_pofiles
 from expects import *
 
