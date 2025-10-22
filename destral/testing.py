@@ -3,6 +3,7 @@ import logging
 import os
 import unittest
 import sys
+import six
 
 from destral.junitxml_testing import JUnitXMLResult, LoggerStream
 from destral.junitxml_testing import JUnitXMLApplicationFactory
@@ -10,6 +11,7 @@ from destral.junitxml_testing import JUnitXMLMambaFormatter
 from destral.openerp import OpenERPService
 from destral.transaction import Transaction
 from destral.utils import module_exists
+from destral.patch import PatchNewCursors
 from osconf import config_from_environment
 from ctx import _ws_info
 from tools.service_utils import WebserviceBase
@@ -90,16 +92,39 @@ class OOTestLoader(unittest.TestLoader):
         return self.check_suite(suite)
 
 
+class OOTestCaseMeta(type):
+    """Metaclass to auto-apply PatchNewCursors decorator when all_patched_cursors is True"""
+    
+    def __new__(mcs, name, bases, namespace):
+        # Check if all_patched_cursors is True
+        if namespace.get('all_patched_cursors', False):
+            # Apply PatchNewCursors decorator to all test methods
+            for attr_name, attr_value in list(namespace.items()):
+                if (attr_name.startswith('test') and 
+                    callable(attr_value) and 
+                    not isinstance(attr_value, classmethod) and 
+                    not isinstance(attr_value, staticmethod)):
+                    namespace[attr_name] = PatchNewCursors()(attr_value)
+        
+        return super(OOTestCaseMeta, mcs).__new__(mcs, name, bases, namespace)
+
+
+@six.add_metaclass(OOTestCaseMeta)
 class OOTestCase(unittest.TestCase):
     """Base class to inherit test cases from for OpenERP Testing Framework.
 
     :ivar openerp: OpenERPService instance for database operations
     :type openerp: OpenERPService or None
+    :ivar all_patched_cursors: If True, all test methods will be decorated with PatchNewCursors
+    :type all_patched_cursors: bool
     """
     openerp = None
 
     """Require demo data to run the tests?"""
     require_demo_data = False
+    
+    """Apply PatchNewCursors decorator to all test methods?"""
+    all_patched_cursors = False
 
     @classmethod
     def setUpClass(cls):
