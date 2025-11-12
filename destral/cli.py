@@ -104,6 +104,10 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
     addons_path = service.config['addons_path']
     root_path = service.config['root_path']
 
+    # Sort modules by dependencies
+    if modules_to_test:
+        modules_to_test = sort_modules_by_dependencies(modules_to_test, addons_path)
+
     if not modules_to_test:
         coverage_config = {
             'source': [root_path],
