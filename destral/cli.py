@@ -37,7 +37,7 @@ logger = logging.getLogger('destral.cli')
 @click.option(
     '--coverage-html-report', type=click.STRING, nargs=1, default="", help="Coverage HTML report path"
 )
-@click.option('--coverage-without-test-lines', type=click.BOOL, default=True, is_flag=True)
+@click.option('--coverage-without-test-lines', type=click.BOOL, default=True)
 def destral(modules, tests, all_tests=None, enable_coverage=None,
             report_coverage=None, report_junitxml=None, dropdb=None,
             requirements=None, **kwargs):
