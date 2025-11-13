@@ -37,6 +37,7 @@ logger = logging.getLogger('destral.cli')
 @click.option(
     '--coverage-html-report', type=click.STRING, nargs=1, default="", help="Coverage HTML report path"
 )
+@click.option('--coverage-without-test-lines', type=click.BOOL, default=True, is_flag=True)
 def destral(modules, tests, all_tests=None, enable_coverage=None,
             report_coverage=None, report_junitxml=None, dropdb=None,
             requirements=None, **kwargs):
@@ -45,6 +46,7 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
     constraints_file = kwargs.pop('constraints_file')
     coverage_html_report = kwargs.pop('coverage_html_report')
     database = kwargs.pop('database')
+    coverage_no_test_lines = kwargs.pop('coverage_without_test_lines')
     if database:
         os.environ['OPENERP_DB_NAME'] = database
     sys.argv = sys.argv[:1]
@@ -118,6 +120,9 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
             'source': coverage_modules_path(modules_to_test, addons_path),
             'omit': ['*/__terp__.py']
         }
+
+    if coverage_no_test_lines:
+        coverage_config['omit'].append('*/tests/*')
 
     coverage = OOCoverage(**coverage_config)
     coverage.enabled = (enable_coverage or report_coverage)
