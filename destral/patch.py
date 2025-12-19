@@ -1,10 +1,18 @@
 import logging
 import functools
-import psycopg2
 from ctx import current_session, current_cursor
 
 
 logger = logging.getLogger(__name__)
+
+_orig_psycopg2_connect = None
+
+
+def _patched_psycopg2_connect(*args, **kwargs):
+    from destral.transaction import Transaction
+    cursor = Transaction().cursor
+    conn = _orig_psycopg2_connect(*args, **kwargs)
+    return PatchedConnection(conn, cursor)
 
 
 class RestorePatchedRegisterAll(object):
@@ -86,13 +94,6 @@ class PatchNewCursors(object):
         conn = sql_db.Connection(sql_db._Pool, db_name)
         return PatchedConnection(conn, cursor)
 
-    @staticmethod
-    def psycopg2_connect(*args, **kwargs):
-        from destral.transaction import Transaction
-        cursor = Transaction().cursor
-        conn = PatchNewCursors.orig_psycopg2_connect(*args, **kwargs)
-        return PatchedConnection(conn, cursor)
-
     def patch(self):
         """
         Patch the database connection to always return the same cursor.
@@ -105,11 +106,13 @@ class PatchNewCursors(object):
         """
         import sql_db
         import psycopg2
+        global _orig_psycopg2_connect
         logger.info('Patching creation of new cursors')
         self.orig = sql_db.db_connect
         sql_db.db_connect = PatchNewCursors.db_connect
-        PatchNewCursors.orig_psycopg2_connect = psycopg2.connect
-        psycopg2.connect = PatchNewCursors.psycopg2_connect
+        if _orig_psycopg2_connect is None:
+            _orig_psycopg2_connect = psycopg2.connect
+        psycopg2.connect = _patched_psycopg2_connect
         self.orig_db = current_session.db
         current_session.db = PatchedConnection(current_session.db, current_cursor)
 
@@ -125,7 +128,7 @@ class PatchNewCursors(object):
         import psycopg2
         logger.info('Unpatching creation of new cursors')
         sql_db.db_connect = self.orig
-        psycopg2.connect = PatchNewCursors.orig_psycopg2_connect
+        psycopg2.connect = _orig_psycopg2_connect
         current_session.db = self.orig_db
 
     def __enter__(self):
