@@ -1,6 +1,5 @@
 import logging
 import functools
-import psycopg2
 from ctx import current_session, current_cursor
 
 
@@ -86,12 +85,16 @@ class PatchNewCursors(object):
         conn = sql_db.Connection(sql_db._Pool, db_name)
         return PatchedConnection(conn, cursor)
 
-    @staticmethod
-    def psycopg2_connect(*args, **kwargs):
-        from destral.transaction import Transaction
-        cursor = Transaction().cursor
-        conn = PatchNewCursors.orig_psycopg2_connect(*args, **kwargs)
-        return PatchedConnection(conn, cursor)
+    def _make_patched_psycopg2_connect(self, orig_connect):
+        """Create a patched psycopg2.connect function that uses the original connection."""
+
+        def _patched_psycopg2_connect(*args, **kwargs):
+            from destral.transaction import Transaction
+            cursor = Transaction().cursor
+            conn = orig_connect(*args, **kwargs)
+            return PatchedConnection(conn, cursor)
+
+        return _patched_psycopg2_connect
 
     def patch(self):
         """
@@ -108,8 +111,8 @@ class PatchNewCursors(object):
         logger.info('Patching creation of new cursors')
         self.orig = sql_db.db_connect
         sql_db.db_connect = PatchNewCursors.db_connect
-        PatchNewCursors.orig_psycopg2_connect = psycopg2.connect
-        psycopg2.connect = PatchNewCursors.psycopg2_connect
+        self.orig_psycopg2_connect = psycopg2.connect
+        psycopg2.connect = self._make_patched_psycopg2_connect(self.orig_psycopg2_connect)
         self.orig_db = current_session.db
         current_session.db = PatchedConnection(current_session.db, current_cursor)
 
@@ -125,7 +128,7 @@ class PatchNewCursors(object):
         import psycopg2
         logger.info('Unpatching creation of new cursors')
         sql_db.db_connect = self.orig
-        psycopg2.connect = PatchNewCursors.orig_psycopg2_connect
+        psycopg2.connect = self.orig_psycopg2_connect
         current_session.db = self.orig_db
 
     def __enter__(self):
