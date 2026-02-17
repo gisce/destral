@@ -27,7 +27,7 @@ else:
 
 setup(
     name='destral',
-    version='2.3.1',
+    version='2.3.2',
     packages=find_packages(),
     url='https://github.com/gisce/destral',
     install_requires=requirements,
