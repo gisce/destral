@@ -40,6 +40,7 @@ jobs:
         run: |
           python -m pip install -U pip wheel
           python -m pip install -U "setuptools<81.0.0"
+          python -m pip install -v "lazy-object-proxy==1.6.0"
 
       - name: Install project dependencies
         run: |
