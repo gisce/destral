@@ -36,14 +36,17 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Upgrade pip
-        run: python -m pip install --upgrade pip
+      - name: Upgrade packaging tooling
+        run: |
+          python -m pip install -U pip wheel
+          python -m pip install -U "setuptools<81.0.0"
+          python -m pip install -v "lazy-object-proxy==1.6.0"
 
       - name: Install project dependencies
         run: |
-          python -m pip install -e .
           python -m pip install -r requirements-dev.txt
           python -m pip install -r erp/requirements.txt
+          python -m pip install -e .
           python -m pip install -r erp/server/bin/msgpackapi/requirements.txt
           python -m pip install -r erp/server/bin/restapi/requirements.txt
           python -m pip install -r erp/server/bin/addons/base/requirements.txt
@@ -96,9 +99,9 @@ jobs:
 
       - name: Install project dependencies
         run: |
-          python -m pip install -e .
           python -m pip install -r requirements-dev.txt
           python -m pip install -r erp/requirements.txt
+          python -m pip install -e .
           python -m pip install -r erp/server/bin/msgpackapi/requirements.txt
           python -m pip install -r erp/server/bin/restapi/requirements.txt
           python -m pip install -r erp/server/bin/addons/base/requirements.txt
