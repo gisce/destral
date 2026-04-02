@@ -49,6 +49,17 @@ class OpenERPService(object):
         self.pool = None    # type: Optional[osv_pool]
         self.cursor_stack = _cursor_context
         self.ws_stack = _ws_info
+
+        try:
+            from ctx import _wizard_changes_stack
+            self.wizard_stack = _wizard_changes_stack
+            from tools.service_utils import KeepWizardsSync
+            self.wizard_sync = KeepWizardsSync(auto_sync=False)
+            self.wizard_stack.push(self.wizard_sync)
+        except ImportError:
+            self.wizard_stack = None
+            self.wizard_sync = None
+
         if 'db_name' in config:
             try:
                 self.db_name = config['db_name']
@@ -59,6 +70,14 @@ class OpenERPService(object):
                 self.db_name = self.create_database(False, db_name=config['db_name'])
         # Stop the cron
         netsvc.Agent.quit()
+
+    def __del__(self):
+        try:
+            if self.wizard_stack:
+                self.wizard_stack.pop()
+                self.wizard_sync = None
+        except Exception:
+            pass
 
     def create_database(self, template=True, db_name=None):
         """Creates a new database.
