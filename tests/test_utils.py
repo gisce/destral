@@ -136,6 +136,20 @@ class SortModulesByDependenciesTests(unittest.TestCase):
         result = utils.sort_modules_by_dependencies([], self.addons_dir)
         self.assertEqual(result, [])
 
+    def test_get_modules_and_dependencies_single_module(self):
+        """Test expanding a module includes its dependencies in order"""
+        result = utils.get_modules_and_dependencies(
+            ['module_c'], self.addons_dir
+        )
+        self.assertEqual(result, ['base', 'module_a', 'module_b', 'module_c'])
+
+    def test_get_modules_and_dependencies_multiple_modules(self):
+        """Test expanding multiple modules deduplicates shared dependencies"""
+        result = utils.get_modules_and_dependencies(
+            ['module_b', 'module_c'], self.addons_dir
+        )
+        self.assertEqual(result, ['base', 'module_a', 'module_b', 'module_c'])
+
     def test_sort_modules_without_shared_dependencies(self):
         """Test sorting modules that don't depend on each other"""
         # Only include module_a and base (module_a depends on base)

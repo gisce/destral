@@ -14,6 +14,7 @@ __all__ = [
     'detect_module',
     'module_exists',
     'get_dependencies',
+    'get_modules_and_dependencies',
     'sort_modules_by_dependencies',
     'find_files',
     'install_requirements',
@@ -114,6 +115,23 @@ def get_dependencies(module, addons_path=None, deps=None):
             deps += get_dependencies(dep, addons_path, deps)
 
     return list(set(deps))
+
+
+def get_modules_and_dependencies(modules, addons_path):
+    """Get modules and all their dependencies sorted by dependency order.
+
+    :param modules: List of module names to expand
+    :param addons_path: Path to find the modules
+    :return: A list of dependencies and modules sorted by dependencies
+    """
+    modules_and_deps = []
+    for module in modules:
+        for dep in get_dependencies(module, addons_path):
+            if dep not in modules_and_deps:
+                modules_and_deps.append(dep)
+        if module not in modules_and_deps:
+            modules_and_deps.append(module)
+    return sort_modules_by_dependencies(modules_and_deps, addons_path)
 
 
 def sort_modules_by_dependencies(modules, addons_path):

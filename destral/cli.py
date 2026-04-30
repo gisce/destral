@@ -26,6 +26,7 @@ logger = logging.getLogger('destral.cli')
 @click.option('--modules', '-m', multiple=True)
 @click.option('--tests', '-t', multiple=True)
 @click.option('--all-tests', '-a', type=click.BOOL, default=False, is_flag=True)
+@click.option('--all-installed-tests', type=click.BOOL, default=False, is_flag=True)
 @click.option('--enable-coverage', type=click.BOOL, default=False, is_flag=True)
 @click.option('--report-coverage', type=click.BOOL, default=False, is_flag=True)
 @click.option('--report-junitxml', type=click.STRING, nargs=1, default="")
@@ -46,7 +47,9 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
     constraints_file = kwargs.pop('constraints_file')
     coverage_html_report = kwargs.pop('coverage_html_report')
     database = kwargs.pop('database')
+    installed_modules_tests = kwargs.pop('installed_modules_tests')
     coverage_no_test_lines = kwargs.pop('coverage_without_test_lines')
+    initial_database = database or os.environ.get('OPENERP_DB_NAME')
     if database:
         os.environ['OPENERP_DB_NAME'] = database
     sys.argv = sys.argv[:1]
@@ -107,7 +110,10 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
     root_path = service.config['root_path']
 
     # Sort modules by dependencies
-    if modules_to_test:
+    modules_to_install = modules_to_test[:]
+    if installed_modules_tests and modules_to_test:
+        modules_to_test = get_modules_and_dependencies(modules_to_test, addons_path)
+    elif modules_to_test:
         modules_to_test = sort_modules_by_dependencies(modules_to_test, addons_path)
 
     if not modules_to_test:
@@ -128,6 +134,18 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
     coverage.enabled = (enable_coverage or report_coverage)
 
     junitxml_suites = []
+    created_database = False
+    installed_service = None
+    if installed_modules_tests and modules_to_install:
+        installed_service = OpenERPService()
+        if not installed_service.db_name:
+            installed_service.db_name = installed_service.create_database(False)
+            os.environ['OPENERP_DB_NAME'] = installed_service.db_name
+            created_database = True
+        for module in sort_modules_by_dependencies(modules_to_install, addons_path):
+            if requirements:
+                install_requirements(module, addons_path, constraints_file=constraints_file)
+            installed_service.install_module(module, with_test_depends=True)
 
     coverage.start()
     server_spec_suite = get_spec_suite(root_path)
@@ -142,7 +160,7 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
     logger.info('Modules to test: {}'.format(','.join(modules_to_test)))
     for module in modules_to_test:
         with RestorePatchedRegisterAll():
-            if requirements:
+            if requirements and not installed_modules_tests:
                 install_requirements(module, addons_path, constraints_file=constraints_file)
             spec_suite = get_spec_suite(os.path.join(addons_path, module))
             if spec_suite:
@@ -196,6 +214,12 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
     return_code = 0
     if not all(results):
         return_code = 1
+
+    if installed_service and created_database and dropdb:
+        installed_service.drop_database()
+        os.environ.pop('OPENERP_DB_NAME', None)
+    elif installed_service and not initial_database:
+        os.environ.pop('OPENERP_DB_NAME', None)
 
     service.shutdown(return_code)
     sys.exit(return_code)
