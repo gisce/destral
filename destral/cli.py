@@ -26,7 +26,11 @@ logger = logging.getLogger('destral.cli')
 @click.option('--modules', '-m', multiple=True)
 @click.option('--tests', '-t', multiple=True)
 @click.option('--all-tests', '-a', type=click.BOOL, default=False, is_flag=True)
-@click.option('--all-installed-tests', type=click.BOOL, default=False, is_flag=True)
+@click.option(
+    '--all-installed-tests', '--installed-modules-tests',
+    'installed_modules_tests', type=click.BOOL, default=False,
+    is_flag=True
+)
 @click.option('--enable-coverage', type=click.BOOL, default=False, is_flag=True)
 @click.option('--report-coverage', type=click.BOOL, default=False, is_flag=True)
 @click.option('--report-junitxml', type=click.STRING, nargs=1, default="")

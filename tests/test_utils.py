@@ -136,6 +136,11 @@ class SortModulesByDependenciesTests(unittest.TestCase):
         result = utils.sort_modules_by_dependencies([], self.addons_dir)
         self.assertEqual(result, [])
 
+    def test_get_dependencies_preserves_dependency_order(self):
+        """Test dependencies are returned in deterministic dependency order"""
+        result = utils.get_dependencies('module_c', self.addons_dir)
+        self.assertEqual(result, ['base', 'module_a', 'module_b'])
+
     def test_get_modules_and_dependencies_single_module(self):
         """Test expanding a module includes its dependencies in order"""
         result = utils.get_modules_and_dependencies(

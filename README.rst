@@ -77,6 +77,7 @@ Key options:
 * ``--modules`` limits the run to specific addons.
 * ``--all-installed-tests`` installs the selected addon first and then runs
   tests for its dependency chain, from ``base`` up to the selected addon.
+  ``--installed-modules-tests`` is accepted as a backwards-compatible alias.
 * ``--enable-coverage`` / ``--report-coverage`` gather coverage metrics.
 * ``--report-junitxml`` writes suites under the given directory.
 * ``--requirements`` installs ``requirements*.txt`` for the addon and its

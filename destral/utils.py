@@ -111,10 +111,10 @@ def get_dependencies(module, addons_path=None, deps=None):
 
     for dep in terp['depends']:
         if dep not in deps:
+            get_dependencies(dep, addons_path, deps)
             deps.append(dep)
-            deps += get_dependencies(dep, addons_path, deps)
 
-    return list(set(deps))
+    return deps
 
 
 def get_modules_and_dependencies(modules, addons_path):
