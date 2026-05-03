@@ -1,5 +1,12 @@
 from ast import literal_eval
-import imp
+try:
+    from importlib import util as importlib_util
+except ImportError:
+    importlib_util = None
+if importlib_util is None:
+    import imp
+else:
+    imp = None
 import logging
 import os
 import re
@@ -50,30 +57,50 @@ def detect_module(path):
     return None
 
 
-def module_exists(module):
-    """Check if a python module exists.
+def _clear_netsvc_services():
+    try:
+        import netsvc
+    except ImportError:
+        return
+    netsvc.SERVICES.clear()
 
-    This is used to check if a module have its own tests defined, Eg:
-    `addons.module_name.tests`
-    
-    :param module: Module name to check
-    :return: True if exists or False if not
-    """
+
+def _module_exists_with_imp(module):
     modlist = module.split('.')
     pathlist = None
     for mod in modlist:
+        openfile = None
         try:
             openfile, pathname, desc = imp.find_module(mod, pathlist)
             pathlist = [pathname]
-            # Clean netsvc Services
-            import netsvc
-            netsvc.SERVICES.clear()
+            _clear_netsvc_services()
         except ImportError:
             return False
-        else:
+        finally:
             if openfile:
                 openfile.close()
-                return True
+    return True
+
+
+def module_exists(module):
+    """Check if a python module exists.
+
+    This is used to check if a module has its own tests defined, Eg:
+    `addons.module_name.tests`
+
+    :param module: Module name to check
+    :return: True if exists or False if not
+    """
+    if importlib_util is None:
+        return _module_exists_with_imp(module)
+
+    try:
+        found = importlib_util.find_spec(module) is not None
+    except (ImportError, AttributeError, ValueError):
+        found = False
+    if found:
+        _clear_netsvc_services()
+    return found
 
 
 def get_dependencies(module, addons_path=None, deps=None):
@@ -171,7 +198,7 @@ def find_files(diff):
     """Return all the files implicated in a diff
     """
     paths = []
-    for line in re.findall(u"--- a/.*|\+\+\+ b/.*", diff):
+    for line in re.findall(u"--- a/.*|\\+\\+\\+ b/.*", diff):
         line = u'/'.join(line.split(u'/')[1:])
         paths.append(line)
     return list(set(paths))
