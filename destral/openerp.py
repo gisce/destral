@@ -1,5 +1,11 @@
 import logging
-import time
+import re
+import uuid
+
+try:
+    string_types = (basestring,)
+except NameError:
+    string_types = (str,)
 
 from osconf import config_from_environment
 from typing import Optional
@@ -14,6 +20,27 @@ logger = logging.getLogger('destral.openerp')
 DEFAULT_USER = 1
 """Default user id
 """
+
+DATABASE_NAME_RE = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
+POSTGRES_IDENTIFIER_MAX_LENGTH = 63
+
+
+def generate_database_name():
+    return 'test_{}'.format(uuid.uuid4().hex)
+
+
+def validate_database_name(db_name):
+    if not isinstance(db_name, string_types):
+        raise ValueError('Invalid database name: {!r}'.format(db_name))
+    if len(db_name) > POSTGRES_IDENTIFIER_MAX_LENGTH:
+        raise ValueError('Database name is too long: {!r}'.format(db_name))
+    if not DATABASE_NAME_RE.match(db_name):
+        raise ValueError('Invalid database name: {!r}'.format(db_name))
+    return db_name
+
+
+def quote_database_identifier(db_name):
+    return '"{}"'.format(validate_database_name(db_name))
 
 
 def patched_pool_jobs(*args, **kwargs):
@@ -30,7 +57,7 @@ class OpenERPService(object):
     def __init__(self, **kwargs):
         """Creates a new OpenERP service.
 
-        :param \**kwargs: keyword arguments passed to the config
+        :param kwargs: keyword arguments passed to the config
         """
         config = config_from_environment('OPENERP', [], **kwargs)
         import service
@@ -66,7 +93,9 @@ class OpenERPService(object):
         :param template: use a template (name must be `base`) (default True)
         """
         if db_name is None:
-            db_name = 'test_' + str(int(time.time()))
+            db_name = generate_database_name()
+        db_name = validate_database_name(db_name)
+        quoted_db_name = quote_database_identifier(db_name)
         import sql_db
         conn = sql_db.db_connect('postgres')
         cursor = conn.cursor()
@@ -74,11 +103,11 @@ class OpenERPService(object):
             logger.info('Creating database %s', db_name)
             cursor.autocommit(True)
             if template:
-                cursor.execute('CREATE DATABASE {} WITH TEMPLATE base'.format(
-                    db_name
+                cursor.execute('CREATE DATABASE {} WITH TEMPLATE {}'.format(
+                    quoted_db_name, quote_database_identifier('base')
                 ))
             else:
-                cursor.execute('CREATE DATABASE {}'.format(db_name))
+                cursor.execute('CREATE DATABASE {}'.format(quoted_db_name))
             return db_name
         finally:
             cursor.close()
@@ -88,20 +117,23 @@ class OpenERPService(object):
         """Drop database from `self.db_name`
         """
         import sql_db
-        sql_db.close_db(self.db_name)
+        db_name = validate_database_name(self.db_name)
+        quoted_db_name = quote_database_identifier(db_name)
+        sql_db.close_db(db_name)
         conn = sql_db.db_connect('template1')
         cursor = conn.cursor()
         try:
-            logger.info('Droping database %s', self.db_name)
+            logger.info('Droping database %s', db_name)
             cursor.autocommit(True)
-            logger.info('Disconnect all sessions from database %s', self.db_name)
+            logger.info('Disconnect all sessions from database %s', db_name)
             cursor.execute(
                 "SELECT pg_terminate_backend(pg_stat_activity.pid) "
                 " FROM pg_stat_activity "
-                " WHERE pg_stat_activity.datname = '{}'"
-                " AND pid <> pg_backend_pid() ".format(self.db_name)
+                " WHERE pg_stat_activity.datname = %s"
+                " AND pid <> pg_backend_pid() ",
+                (db_name,)
             )
-            cursor.execute('DROP DATABASE ' + self.db_name)
+            cursor.execute('DROP DATABASE {}'.format(quoted_db_name))
         finally:
             cursor.close()
 
@@ -113,6 +145,8 @@ class OpenERPService(object):
 
     @db_name.setter
     def db_name(self, value):
+        if value:
+            value = validate_database_name(value)
         self.config['db_name'] = value
         if value:
             self.db, self.pool = self.pooler.get_db_and_pool(self.db_name)
