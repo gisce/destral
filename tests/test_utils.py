@@ -164,5 +164,64 @@ class SortModulesByDependenciesTests(unittest.TestCase):
         self.assertEqual(result, ['base', 'module_a'])
 
 
+class InstallRequirementsTests(unittest.TestCase):
+
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+        self.old_prefix = utils.sys.prefix
+        self.old_check_call = utils.subprocess.check_call
+        self.old_get_dependencies = utils.get_dependencies
+        self.calls = []
+        bin_dir = os.path.join(self.tempdir, 'bin')
+        os.makedirs(bin_dir)
+        open(os.path.join(bin_dir, 'pip'), 'w').close()
+        utils.sys.prefix = self.tempdir
+        utils.subprocess.check_call = self.calls.append
+
+    def tearDown(self):
+        utils.get_dependencies = self.old_get_dependencies
+        utils.subprocess.check_call = self.old_check_call
+        utils.sys.prefix = self.old_prefix
+        shutil.rmtree(self.tempdir)
+
+    def _create_requirements(self, module):
+        module_dir = os.path.join(self.tempdir, 'addons', module)
+        os.makedirs(module_dir)
+        open(os.path.join(module_dir, 'requirements.txt'), 'w').close()
+        return module_dir
+
+    def test_install_requirements_can_skip_dependency_expansion(self):
+        addons_dir = os.path.join(self.tempdir, 'addons')
+        self._create_requirements('dep')
+        self._create_requirements('module_a')
+        utils.get_dependencies = lambda module, addons_path: ['dep']
+
+        utils.install_requirements(
+            'module_a', addons_dir, include_dependencies=False
+        )
+
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(
+            self.calls[0][-1],
+            os.path.join(addons_dir, 'module_a', 'requirements.txt')
+        )
+
+    def test_install_requirements_keeps_dependency_expansion_by_default(self):
+        addons_dir = os.path.join(self.tempdir, 'addons')
+        self._create_requirements('dep')
+        self._create_requirements('module_a')
+        utils.get_dependencies = lambda module, addons_path: ['dep']
+
+        utils.install_requirements('module_a', addons_dir)
+
+        self.assertEqual(
+            [call[-1] for call in self.calls],
+            [
+                os.path.join(addons_dir, 'dep', 'requirements.txt'),
+                os.path.join(addons_dir, 'module_a', 'requirements.txt'),
+            ]
+        )
+
+
 if __name__ == '__main__':
     unittest.main()

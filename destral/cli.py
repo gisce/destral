@@ -146,9 +146,16 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
             installed_service.db_name = installed_service.create_database(False)
             os.environ['OPENERP_DB_NAME'] = installed_service.db_name
             created_database = True
+        modules_with_dependencies = get_modules_and_dependencies(
+            modules_to_install, addons_path
+        )
+        if requirements:
+            for module in modules_with_dependencies:
+                install_requirements(
+                    module, addons_path, constraints_file=constraints_file,
+                    include_dependencies=False
+                )
         for module in sort_modules_by_dependencies(modules_to_install, addons_path):
-            if requirements:
-                install_requirements(module, addons_path, constraints_file=constraints_file)
             installed_service.install_module(module, with_test_depends=True)
 
     coverage.start()
@@ -184,6 +191,7 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
                 logger.error('Suite not found: {}'.format(e))
                 service.shutdown(1)
             suite.drop_database = dropdb
+            suite.skip_module_install = bool(installed_modules_tests)
             suite.config['all_tests'] = all_tests
             if all_tests:
                 for m in get_dependencies(module, addons_path):

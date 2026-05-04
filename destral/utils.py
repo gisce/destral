@@ -195,13 +195,17 @@ def find_files(diff):
     return list(set(paths))
 
 
-def install_requirements(module, addons_path, constraints_file=''):
-    """Install module requirements and its dependecies
+def install_requirements(
+        module, addons_path, constraints_file='', include_dependencies=True):
+    """Install module requirements and its dependencies
     """
     pip = os.path.join(sys.prefix, 'bin', 'pip')
     if os.path.exists(pip):
         logger = logging.getLogger('destral.utils')
-        modules_requirements = get_dependencies(module, addons_path)
+        if include_dependencies:
+            modules_requirements = get_dependencies(module, addons_path)
+        else:
+            modules_requirements = []
         modules_requirements.append(module)
         for module_requirements in modules_requirements:
             addons_path_module = os.path.join(addons_path, module_requirements)
