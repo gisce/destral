@@ -41,8 +41,7 @@ logger = logging.getLogger('destral.cli')
 )
 @click.option('--coverage-without-test-lines', type=click.BOOL, default=True)
 @click.option(
-    '--quiet', '--silent', 'quiet', type=click.BOOL, default=False,
-    is_flag=True,
+    '--quiet', type=click.BOOL, default=False, is_flag=True,
     help=(
         'Capture verbose output and only print a short failure summary. '
         'Default output is unchanged when this option is not used.'
