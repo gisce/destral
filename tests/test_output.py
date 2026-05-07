@@ -21,6 +21,8 @@ class QuietOutputCaptureTests(unittest.TestCase):
 
     def test_enabled_capture_writes_stdout_and_stderr_to_file(self):
         capture = QuietOutputCapture(enabled=True, tail_lines=10)
+        original_stdout = sys.stdout
+        original_stderr = sys.stderr
         original_stdout_fd = os.dup(1)
         original_stderr_fd = os.dup(2)
         try:
@@ -30,9 +32,11 @@ class QuietOutputCaptureTests(unittest.TestCase):
 
             self.assertIn('captured stdout', capture.tail())
             self.assertIn('captured stderr', capture.tail())
+            self.assertIs(sys.stdout, original_stdout)
+            self.assertIs(sys.stderr, original_stderr)
+            self.assertTrue(os.path.sameopenfile(1, original_stdout_fd))
+            self.assertTrue(os.path.sameopenfile(2, original_stderr_fd))
         finally:
-            os.dup2(original_stdout_fd, 1)
-            os.dup2(original_stderr_fd, 2)
             os.close(original_stdout_fd)
             os.close(original_stderr_fd)
             if capture.path and os.path.exists(capture.path):

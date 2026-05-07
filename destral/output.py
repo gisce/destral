@@ -5,6 +5,7 @@ from __future__ import print_function
 import os
 import sys
 import tempfile
+from collections import deque
 
 
 class QuietOutputCapture(object):
@@ -96,15 +97,15 @@ class QuietOutputCapture(object):
         if not self.path or not os.path.exists(self.path):
             return ''
         with open(self.path, 'rb') as output_file:
-            data = output_file.read()
-        if not data:
+            tail_lines = deque(output_file, maxlen=self.tail_lines)
+        if not tail_lines:
             return ''
+        data = b''.join(tail_lines)
         try:
             text = data.decode('utf-8')
         except UnicodeDecodeError:
             text = data.decode('utf-8', 'replace')
-        lines = text.splitlines()
-        return '\n'.join(lines[-self.tail_lines:])
+        return '\n'.join(text.splitlines())
 
     @staticmethod
     def _flush_standard_streams():
