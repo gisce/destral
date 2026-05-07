@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 import logging
+import traceback
 import requests
 
 import click
@@ -12,6 +13,7 @@ from destral.linter import run_linter
 from destral.openerp import OpenERPService
 from destral.patch import RestorePatchedRegisterAll
 from destral.cover import OOCoverage
+from destral.output import QuietOutputCapture
 
 LOG_FORMAT = '%(asctime)s:{0}'.format(logging.BASIC_FORMAT)
 
@@ -38,9 +40,45 @@ logger = logging.getLogger('destral.cli')
     '--coverage-html-report', type=click.STRING, nargs=1, default="", help="Coverage HTML report path"
 )
 @click.option('--coverage-without-test-lines', type=click.BOOL, default=True)
+@click.option(
+    '--quiet', '--silent', 'quiet', type=click.BOOL, default=False,
+    is_flag=True,
+    help=(
+        'Capture verbose output and only print a short failure summary. '
+        'Default output is unchanged when this option is not used.'
+    )
+)
 def destral(modules, tests, all_tests=None, enable_coverage=None,
             report_coverage=None, report_junitxml=None, dropdb=None,
             requirements=None, **kwargs):
+    quiet = kwargs.pop('quiet')
+    quiet_output = QuietOutputCapture(quiet)
+    return_code = 1
+    with quiet_output:
+        try:
+            return_code = run_destral(
+                modules, tests, all_tests=all_tests,
+                enable_coverage=enable_coverage,
+                report_coverage=report_coverage,
+                report_junitxml=report_junitxml, dropdb=dropdb,
+                requirements=requirements, **kwargs
+            )
+        except Exception:
+            if quiet:
+                traceback.print_exc()
+            else:
+                raise
+    if quiet:
+        if return_code:
+            quiet_output.emit_failure_summary(return_code)
+        else:
+            quiet_output.cleanup_success()
+    sys.exit(return_code)
+
+
+def run_destral(modules, tests, all_tests=None, enable_coverage=None,
+                report_coverage=None, report_junitxml=None, dropdb=None,
+                requirements=None, **kwargs):
     os.environ['OPENERP_DESTRAL_MODE'] = "1"
     enable_lint = kwargs.pop('enable_lint')
     constraints_file = kwargs.pop('constraints_file')
@@ -161,6 +199,7 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
             except Exception as e:
                 logger.error('Suite not found: {}'.format(e))
                 service.shutdown(1)
+                return 1
             suite.drop_database = dropdb
             suite.config['all_tests'] = all_tests
             if all_tests:
@@ -198,7 +237,7 @@ def destral(modules, tests, all_tests=None, enable_coverage=None,
         return_code = 1
 
     service.shutdown(return_code)
-    sys.exit(return_code)
+    return return_code
 
 
 if __name__ == '__main__':
