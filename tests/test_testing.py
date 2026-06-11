@@ -1,9 +1,18 @@
 # coding=utf-8
+from contextlib import contextmanager
 import unittest
 
-from mock import Mock, patch
-
 from destral import testing
+
+
+@contextmanager
+def patched_attr(obj, name, value):
+    old_value = getattr(obj, name)
+    setattr(obj, name, value)
+    try:
+        yield
+    finally:
+        setattr(obj, name, old_value)
 
 
 class FakeOpenERP(object):
@@ -57,12 +66,12 @@ class CursorPatchTests(unittest.TestCase):
         test_case.openerp = FakeOpenERP()
         transaction = FakeTransaction(events)
         cursor_patch = FakePatchNewCursors(events)
-        tracker = Mock(name='tracker')
+        tracker = object()
 
-        with patch.object(testing, 'Transaction', return_value=transaction), \
-                patch.object(testing, 'PatchNewCursors', return_value=cursor_patch), \
-                patch.object(testing, '_ws_info', FakeWsInfo(events)), \
-                patch.object(testing, 'WebServiceTracker', return_value=tracker):
+        with patched_attr(testing, 'Transaction', lambda: transaction), \
+                patched_attr(testing, 'PatchNewCursors', lambda: cursor_patch), \
+                patched_attr(testing, '_ws_info', FakeWsInfo(events)), \
+                patched_attr(testing, 'WebServiceTracker', lambda uid: tracker):
             test_case.setUp()
             test_case.tearDown()
 

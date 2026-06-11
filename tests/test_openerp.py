@@ -4,6 +4,23 @@ import types
 import unittest
 
 
+previous_modules = {}
+
+
+def set_fake_module(name, module):
+    previous_modules.setdefault(name, sys.modules.get(name))
+    sys.modules[name] = module
+
+
+def tearDownModule():
+    for name, module in list(previous_modules.items()):
+        if module is None:
+            sys.modules.pop(name, None)
+        else:
+            sys.modules[name] = module
+        previous_modules.pop(name, None)
+
+
 class FakeCursor(object):
 
     def __init__(self):
@@ -47,36 +64,48 @@ class FakeSqlDb(types.ModuleType):
         self.closed.append(db_name)
 
 
-fake_typing = types.ModuleType('typing')
-fake_typing.Optional = object
-sys.modules.setdefault('typing', fake_typing)
+try:
+    import typing  # noqa
+except ImportError:
+    fake_typing = types.ModuleType('typing')
+    fake_typing.Optional = object
+    set_fake_module('typing', fake_typing)
 
 fake_sql_db = FakeSqlDb()
-sys.modules.setdefault('sql_db', fake_sql_db)
+set_fake_module('sql_db', fake_sql_db)
 
 fake_osconf = types.ModuleType('osconf')
 fake_osconf.config_from_environment = lambda *args, **kwargs: kwargs
-sys.modules.setdefault('osconf', fake_osconf)
+set_fake_module('osconf', fake_osconf)
 
 fake_psycopg2 = types.ModuleType('psycopg2')
 fake_psycopg2.OperationalError = Exception
-sys.modules.setdefault('psycopg2', fake_psycopg2)
+set_fake_module('psycopg2', fake_psycopg2)
 
 fake_osv = types.ModuleType('osv')
 fake_osv_osv = types.ModuleType('osv.osv')
 fake_osv_osv.osv_pool = object
-sys.modules.setdefault('osv', fake_osv)
-sys.modules.setdefault('osv.osv', fake_osv_osv)
+set_fake_module('osv', fake_osv)
+set_fake_module('osv.osv', fake_osv_osv)
 
 from destral import openerp
+tearDownModule()
 
 
 class DatabaseNameTests(unittest.TestCase):
 
     def setUp(self):
+        self.previous_sql_db = sys.modules.get('sql_db')
+        sys.modules['sql_db'] = fake_sql_db
         fake_sql_db.cursor = FakeCursor()
         fake_sql_db.closed = []
         fake_sql_db.connected = []
+
+    def tearDown(self):
+        if self.previous_sql_db is None:
+            sys.modules.pop('sql_db', None)
+        else:
+            sys.modules['sql_db'] = self.previous_sql_db
 
     def test_generate_database_name_uses_safe_unique_prefix(self):
         db_name = openerp.generate_database_name()
