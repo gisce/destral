@@ -14,6 +14,7 @@ __all__ = [
     'detect_module',
     'module_exists',
     'get_dependencies',
+    'sort_modules_by_dependencies',
     'find_files',
     'install_requirements',
     'coverage_modules_path'
@@ -113,6 +114,57 @@ def get_dependencies(module, addons_path=None, deps=None):
             deps += get_dependencies(dep, addons_path, deps)
 
     return list(set(deps))
+
+
+def sort_modules_by_dependencies(modules, addons_path):
+    """Sort modules by their dependencies.
+    
+    Modules are sorted so that dependencies come before the modules that 
+    depend on them. For example, if module_a depends on module_b, the result 
+    will be [module_b, module_a].
+    
+    :param modules: List of module names to sort
+    :param addons_path: Path to find the modules
+    :return: A list of modules sorted by dependencies
+    """
+    if not modules:
+        return []
+    
+    # Build dependency graph for all modules
+    module_deps = {}
+    for module in modules:
+        try:
+            deps = get_dependencies(module, addons_path)
+            # Only keep dependencies that are in our module list
+            module_deps[module] = [d for d in deps if d in modules]
+        except Exception:
+            # If we can't get dependencies, assume no deps
+            module_deps[module] = []
+    
+    # Topological sort
+    sorted_modules = []
+    visited = set()
+    visiting = set()
+    
+    def visit(module):
+        if module in visited:
+            return
+        if module in visiting:
+            # Circular dependency detected, just continue
+            return
+        
+        visiting.add(module)
+        for dep in module_deps.get(module, []):
+            if dep in modules:  # Only visit if in our list
+                visit(dep)
+        visiting.remove(module)
+        visited.add(module)
+        sorted_modules.append(module)
+    
+    for module in modules:
+        visit(module)
+    
+    return sorted_modules
 
 
 def find_files(diff):

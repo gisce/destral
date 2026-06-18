@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 import logging
+import traceback
 import requests
 
 import click
@@ -12,6 +13,7 @@ from destral.linter import run_linter
 from destral.openerp import OpenERPService
 from destral.patch import RestorePatchedRegisterAll
 from destral.cover import OOCoverage
+from destral.output import QuietOutputCapture
 
 LOG_FORMAT = '%(asctime)s:{0}'.format(logging.BASIC_FORMAT)
 
@@ -36,14 +38,54 @@ logger = logging.getLogger('destral.cli')
 @click.option('--requirements/--no-requirements', default=True)
 @click.option('--enable-lint', type=click.BOOL, default=False, is_flag=True)
 @click.option('--constraints-file', type=click.STRING, nargs=1, default="")
+@click.option(
+    '--coverage-html-report', type=click.STRING, nargs=1, default="", help="Coverage HTML report path"
+)
+@click.option('--coverage-without-test-lines', type=click.BOOL, default=True)
+@click.option(
+    '--quiet', type=click.BOOL, default=False, is_flag=True,
+    help=(
+        'Capture verbose output and only print a short failure summary. '
+        'Default output is unchanged when this option is not used.'
+    )
+)
 def destral(modules, tests, export_translations=False, all_tests=None, enable_coverage=None,
             report_coverage=None, report_junitxml=None, dropdb=None,
             requirements=None, **kwargs):
+    quiet = kwargs.pop('quiet')
+    quiet_output = QuietOutputCapture(quiet)
+    return_code = 1
+    with quiet_output:
+        try:
+            return_code = run_destral(
+                modules, tests, all_tests=all_tests,
+                enable_coverage=enable_coverage,
+                report_coverage=report_coverage,
+                report_junitxml=report_junitxml, dropdb=dropdb,
+                requirements=requirements, **kwargs
+            )
+        except Exception:
+            if quiet:
+                traceback.print_exc()
+            else:
+                raise
+    if quiet:
+        if return_code:
+            quiet_output.emit_failure_summary(return_code)
+        else:
+            quiet_output.cleanup_success()
+    sys.exit(return_code)
+
+
+def run_destral(modules, tests, all_tests=None, enable_coverage=None,
+                report_coverage=None, report_junitxml=None, dropdb=None,
+                requirements=None, **kwargs):
     os.environ['OPENERP_DESTRAL_MODE'] = "1"
     enable_lint = kwargs.pop('enable_lint')
     constraints_file = kwargs.pop('constraints_file')
     coverage_html_report = kwargs.pop('coverage_html_report')
     database = kwargs.pop('database')
+    coverage_no_test_lines = kwargs.pop('coverage_without_test_lines')
     if database:
         os.environ['OPENERP_DB_NAME'] = database
     sys.argv = sys.argv[:1]
@@ -115,6 +157,10 @@ def destral(modules, tests, export_translations=False, all_tests=None, enable_co
     addons_path = service.config['addons_path']
     root_path = service.config['root_path']
 
+    # Sort modules by dependencies
+    if modules_to_test:
+        modules_to_test = sort_modules_by_dependencies(modules_to_test, addons_path)
+
     if not modules_to_test:
         coverage_config = {
             'source': [root_path],
@@ -125,6 +171,9 @@ def destral(modules, tests, export_translations=False, all_tests=None, enable_co
             'source': coverage_modules_path(modules_to_test, addons_path),
             'omit': ['*/__terp__.py']
         }
+
+    if coverage_no_test_lines:
+        coverage_config['omit'].append('*/tests/*')
 
     coverage = OOCoverage(**coverage_config)
     coverage.enabled = (enable_coverage or report_coverage)
@@ -163,6 +212,7 @@ def destral(modules, tests, export_translations=False, all_tests=None, enable_co
             except Exception as e:
                 logger.error('Suite not found: {}'.format(e))
                 service.shutdown(1)
+                return 1
             suite.drop_database = dropdb
             suite.config['all_tests'] = all_tests
             if all_tests:
@@ -200,7 +250,7 @@ def destral(modules, tests, export_translations=False, all_tests=None, enable_co
         return_code = 1
 
     service.shutdown(return_code)
-    sys.exit(return_code)
+    return return_code
 
 
 if __name__ == '__main__':

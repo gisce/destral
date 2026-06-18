@@ -50,7 +50,7 @@ class Transaction(local):
         self.cursor = self.service.db.cursor()
         self.service.cursor_stack.push(self.cursor)
         from tools import WebServiceTracker
-        self.ws = WebServiceTracker(db=self.service.db)
+        self.ws = WebServiceTracker(db=self.service.db, uid=user)
         self.service.ws_stack.push(self.ws)
         self.user = user
         try:

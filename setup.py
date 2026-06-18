@@ -9,7 +9,6 @@ requirements = [
     'six',
     'click',
     'coverage',
-    'lazy-object-proxy<1.7.0',
     'pylint<=2.17.7',
     'python-dateutil',
     'babel>=2.4.0',
@@ -21,11 +20,14 @@ requirements = [
 ]
 if sys.version_info.major < 3:
     requirements.append('mamba<0.11.0')
+    requirements.append('lazy-object-proxy<1.7.0',)
 else:
     requirements.append('mamba>=0.11.0')
+    requirements.append('lazy-object-proxy')
+
 setup(
     name='destral',
-    version='2.1.0',
+    version='2.4.0',
     packages=find_packages(),
     url='https://github.com/gisce/destral',
     install_requires=requirements,
