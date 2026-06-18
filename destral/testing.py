@@ -8,6 +8,7 @@ from destral.junitxml_testing import JUnitXMLResult, LoggerStream
 from destral.junitxml_testing import JUnitXMLApplicationFactory
 from destral.junitxml_testing import JUnitXMLMambaFormatter
 from destral.openerp import OpenERPService
+from destral.patch import PatchNewCursors
 from destral.transaction import Transaction
 from destral.utils import module_exists
 from osconf import config_from_environment
@@ -113,14 +114,21 @@ class OOTestCase(unittest.TestCase):
 
 
 class OOTestCaseWithCursor(OOTestCase):
+    _patch_cursors = False
 
     def setUp(self):
+        self._patch_new_cursors = None
         self.txn = Transaction().start(self.database)
         self.cursor = self.txn.cursor
         self.uid = self.txn.user
+        if self._patch_cursors:
+            self._patch_new_cursors = PatchNewCursors()
+            self._patch_new_cursors.patch()
         _ws_info.push(WebServiceTracker(uid=self.uid))
 
     def tearDown(self):
+        if self._patch_new_cursors:
+            self._patch_new_cursors.unpatch()
         self.txn.stop()
         _ws_info.pop()
 
