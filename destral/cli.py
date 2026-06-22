@@ -77,7 +77,7 @@ def destral(modules, tests, export_translations=False, all_tests=None, enable_co
     sys.exit(return_code)
 
 
-def run_destral(modules, tests, all_tests=None, enable_coverage=None,
+def run_destral(modules, tests, export_translations=False, all_tests=None, enable_coverage=None,
                 report_coverage=None, report_junitxml=None, dropdb=None,
                 requirements=None, **kwargs):
     os.environ['OPENERP_DESTRAL_MODE'] = "1"
