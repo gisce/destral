@@ -18,6 +18,18 @@ class UpdateConfigTests(unittest.TestCase):
         self.assertEqual(result, {'existing': 1, 'added': 2})
 
 
+class ModuleExistsTests(unittest.TestCase):
+
+    def test_module_exists_returns_true_for_existing_module(self):
+        self.assertTrue(utils.module_exists('os'))
+
+    def test_module_exists_returns_true_for_existing_submodule(self):
+        self.assertTrue(utils.module_exists('email.mime'))
+
+    def test_module_exists_returns_false_for_missing_module(self):
+        self.assertFalse(utils.module_exists('destral_missing_module_for_tests'))
+
+
 class FindFilesTests(unittest.TestCase):
 
     def test_find_files_returns_unique_paths_from_diff(self):
@@ -31,6 +43,15 @@ class FindFilesTests(unittest.TestCase):
         paths = utils.find_files(diff)
         expected = ['foo/bar.py', 'README']
         self.assertEqual(sorted(paths), sorted(expected))
+
+    def test_find_files_accepts_unicode_diff(self):
+        diff = (
+            u"--- a/foo/bar.py\n"
+            u"+++ b/foo/bar.py\n"
+        )
+
+        paths = utils.find_files(diff)
+        self.assertEqual(paths, ['foo/bar.py'])
 
 
 class CoverageModulesPathTests(unittest.TestCase):
