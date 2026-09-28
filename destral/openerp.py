@@ -206,7 +206,6 @@ class OpenERPService(object):
                     for dep_mod in mod_dep_obj.browse(cursor, uid, deps):
                         if dep_mod.state in ('unknown', 'uninstalled'):
                             unmet_packages.append(dep_mod.name)
-                mod_obj.download(cursor, uid, ids)
                 cursor.commit()
         try:
             self.db, self.pool = pooler.restart_pool(
