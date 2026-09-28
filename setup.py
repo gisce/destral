@@ -11,7 +11,7 @@ requirements = [
     'coverage',
     'pylint<=2.17.7',
     'python-dateutil',
-    'babel>=2.4.0',
+    'babel>=2.4.1',
     'junit_xml',
     'psycopg2',
     'mock',
@@ -27,7 +27,7 @@ else:
 
 setup(
     name='destral',
-    version='2.4.0',
+    version='2.4.1',
     packages=find_packages(),
     url='https://github.com/gisce/destral',
     install_requires=requirements,
