@@ -136,6 +136,25 @@ class SortModulesByDependenciesTests(unittest.TestCase):
         result = utils.sort_modules_by_dependencies([], self.addons_dir)
         self.assertEqual(result, [])
 
+    def test_get_dependencies_preserves_dependency_order(self):
+        """Test dependencies are returned in deterministic dependency order"""
+        result = utils.get_dependencies('module_c', self.addons_dir)
+        self.assertEqual(result, ['base', 'module_a', 'module_b'])
+
+    def test_get_modules_and_dependencies_single_module(self):
+        """Test expanding a module includes its dependencies in order"""
+        result = utils.get_modules_and_dependencies(
+            ['module_c'], self.addons_dir
+        )
+        self.assertEqual(result, ['base', 'module_a', 'module_b', 'module_c'])
+
+    def test_get_modules_and_dependencies_multiple_modules(self):
+        """Test expanding multiple modules deduplicates shared dependencies"""
+        result = utils.get_modules_and_dependencies(
+            ['module_b', 'module_c'], self.addons_dir
+        )
+        self.assertEqual(result, ['base', 'module_a', 'module_b', 'module_c'])
+
     def test_sort_modules_without_shared_dependencies(self):
         """Test sorting modules that don't depend on each other"""
         # Only include module_a and base (module_a depends on base)
@@ -143,6 +162,65 @@ class SortModulesByDependenciesTests(unittest.TestCase):
             ['module_a', 'base'], self.addons_dir
         )
         self.assertEqual(result, ['base', 'module_a'])
+
+
+class InstallRequirementsTests(unittest.TestCase):
+
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+        self.old_prefix = utils.sys.prefix
+        self.old_check_call = utils.subprocess.check_call
+        self.old_get_dependencies = utils.get_dependencies
+        self.calls = []
+        bin_dir = os.path.join(self.tempdir, 'bin')
+        os.makedirs(bin_dir)
+        open(os.path.join(bin_dir, 'pip'), 'w').close()
+        utils.sys.prefix = self.tempdir
+        utils.subprocess.check_call = self.calls.append
+
+    def tearDown(self):
+        utils.get_dependencies = self.old_get_dependencies
+        utils.subprocess.check_call = self.old_check_call
+        utils.sys.prefix = self.old_prefix
+        shutil.rmtree(self.tempdir)
+
+    def _create_requirements(self, module):
+        module_dir = os.path.join(self.tempdir, 'addons', module)
+        os.makedirs(module_dir)
+        open(os.path.join(module_dir, 'requirements.txt'), 'w').close()
+        return module_dir
+
+    def test_install_requirements_can_skip_dependency_expansion(self):
+        addons_dir = os.path.join(self.tempdir, 'addons')
+        self._create_requirements('dep')
+        self._create_requirements('module_a')
+        utils.get_dependencies = lambda module, addons_path: ['dep']
+
+        utils.install_requirements(
+            'module_a', addons_dir, include_dependencies=False
+        )
+
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(
+            self.calls[0][-1],
+            os.path.join(addons_dir, 'module_a', 'requirements.txt')
+        )
+
+    def test_install_requirements_keeps_dependency_expansion_by_default(self):
+        addons_dir = os.path.join(self.tempdir, 'addons')
+        self._create_requirements('dep')
+        self._create_requirements('module_a')
+        utils.get_dependencies = lambda module, addons_path: ['dep']
+
+        utils.install_requirements('module_a', addons_dir)
+
+        self.assertEqual(
+            [call[-1] for call in self.calls],
+            [
+                os.path.join(addons_dir, 'dep', 'requirements.txt'),
+                os.path.join(addons_dir, 'module_a', 'requirements.txt'),
+            ]
+        )
 
 
 if __name__ == '__main__':

@@ -34,6 +34,7 @@ class OOTestSuite(unittest.TestSuite):
             ooconfig['update'].update({'base': 1})
         self.openerp = OpenERPService(**ooconfig)
         self.drop_database = True
+        self.skip_module_install = False
 
     def run(self, result, debug=False):
         """Run the test suite
@@ -51,7 +52,8 @@ class OOTestSuite(unittest.TestSuite):
             else:
                 self.drop_database = False
             result.db_name = self.openerp.db_name
-            self.openerp.install_module(self.config['module'], with_test_depends=True)
+            if not self.skip_module_install:
+                self.openerp.install_module(self.config['module'], with_test_depends=True)
         else:
             self.openerp.db_name = result.db_name
 

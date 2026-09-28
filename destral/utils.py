@@ -14,6 +14,7 @@ __all__ = [
     'detect_module',
     'module_exists',
     'get_dependencies',
+    'get_modules_and_dependencies',
     'sort_modules_by_dependencies',
     'find_files',
     'install_requirements',
@@ -110,10 +111,27 @@ def get_dependencies(module, addons_path=None, deps=None):
 
     for dep in terp['depends']:
         if dep not in deps:
+            get_dependencies(dep, addons_path, deps)
             deps.append(dep)
-            deps += get_dependencies(dep, addons_path, deps)
 
-    return list(set(deps))
+    return deps
+
+
+def get_modules_and_dependencies(modules, addons_path):
+    """Get modules and all their dependencies sorted by dependency order.
+
+    :param modules: List of module names to expand
+    :param addons_path: Path to find the modules
+    :return: A list of dependencies and modules sorted by dependencies
+    """
+    modules_and_deps = []
+    for module in modules:
+        for dep in get_dependencies(module, addons_path):
+            if dep not in modules_and_deps:
+                modules_and_deps.append(dep)
+        if module not in modules_and_deps:
+            modules_and_deps.append(module)
+    return sort_modules_by_dependencies(modules_and_deps, addons_path)
 
 
 def sort_modules_by_dependencies(modules, addons_path):
@@ -177,13 +195,17 @@ def find_files(diff):
     return list(set(paths))
 
 
-def install_requirements(module, addons_path, constraints_file=''):
-    """Install module requirements and its dependecies
+def install_requirements(
+        module, addons_path, constraints_file='', include_dependencies=True):
+    """Install module requirements and its dependencies
     """
     pip = os.path.join(sys.prefix, 'bin', 'pip')
     if os.path.exists(pip):
         logger = logging.getLogger('destral.utils')
-        modules_requirements = get_dependencies(module, addons_path)
+        if include_dependencies:
+            modules_requirements = get_dependencies(module, addons_path)
+        else:
+            modules_requirements = []
         modules_requirements.append(module)
         for module_requirements in modules_requirements:
             addons_path_module = os.path.join(addons_path, module_requirements)
