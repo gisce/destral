@@ -3,6 +3,11 @@ import sys
 import types
 import unittest
 
+try:
+    from unittest import mock
+except ImportError:
+    import mock
+
 
 class FakeCursor(object):
 
@@ -161,6 +166,53 @@ class DatabaseNameTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             service.db_name = 'test;DROP_DATABASE_postgres'
+
+
+class ModuleInstallationTests(unittest.TestCase):
+
+    def test_install_module_does_not_require_remote_download_api(self):
+        cursor = mock.Mock(dbname='test_database')
+        transaction = mock.MagicMock()
+        transaction.cursor = cursor
+        transaction.user = 1
+        transaction_context = mock.MagicMock()
+        transaction_context.__enter__.return_value = transaction
+
+        transaction_factory = mock.Mock()
+        transaction_factory.return_value.start.return_value = transaction_context
+
+        module_obj = mock.Mock(spec=[
+            'search', 'update_list', 'get_module_info', 'button_install',
+            'browse',
+        ])
+        module_obj.search.side_effect = [[], [7], [7]]
+        module_obj.get_module_info.return_value = {}
+        module_obj.browse.return_value = []
+
+        dependency_obj = mock.Mock()
+        pool = mock.Mock()
+        pool.get.side_effect = lambda model: {
+            'ir.module.module': module_obj,
+            'ir.module.module.dependency': dependency_obj,
+        }[model]
+
+        fake_pooler = types.ModuleType('pooler')
+        fake_pooler.get_pool = mock.Mock(return_value=pool)
+        fake_pooler.restart_pool = mock.Mock(return_value=(mock.Mock(), pool))
+
+        service = object.__new__(openerp.OpenERPService)
+        service.config = {'db_name': 'test_database'}
+        service.pool = pool
+
+        with mock.patch.dict(sys.modules, {'pooler': fake_pooler}):
+            with mock.patch('destral.transaction.Transaction', transaction_factory):
+                service.install_module('example_module')
+
+        module_obj.button_install.assert_called_once_with(cursor, 1, [7])
+        cursor.commit.assert_called_once_with()
+        fake_pooler.restart_pool.assert_called_once_with(
+            'test_database', update_module=True
+        )
 
 
 if __name__ == '__main__':
